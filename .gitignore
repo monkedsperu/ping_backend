@@ -1,0 +1,32 @@
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Dependencias y compilación
+/target/
+/build/
+/node_modules/
+.gradle/
+*.class
+
+# IDEs y editores
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Logs y temporales
+*.log
+logs/
+tmp/
+temp/

@@ -1,0 +1,82 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?
+  googleId     String?  @unique
+  displayName  String
+  createdAt    DateTime @default(now())
+}
+
+model Ping {
+  id             String   @id @default(uuid())
+  authorId       String
+  message        String
+  imageUrl       String?
+  color          String?
+  // Point geoespacial en SRID 4326 (WGS84, el estándar de lat/lng en GPS).
+  // Prisma no modela geometry nativamente: se define aquí como Unsupported
+  // y se lee/escribe con SQL crudo en el repositorio (ver prisma-ping.repository.ts).
+  location       Unsupported("geography(Point, 4326)")
+  radiusMeters   Int
+  maxRecipients  Int
+  deliveredCount Int      @default(0)
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+
+  threads PingThread[]
+
+  @@index([status, expiresAt])
+}
+
+// Un hilo = la conversación entre el autor del ping y UNA persona que
+// respondió. Cada respondiente tiene su propio hilo privado; no se ven
+// entre ellos (cada quien le habla al dueño del ping, no le interesa
+// ver lo que dijeron otros).
+model PingThread {
+  id          String   @id @default(uuid())
+  pingId      String
+  ping        Ping     @relation(fields: [pingId], references: [id])
+  responderId String
+  createdAt   DateTime @default(now())
+
+  messages ThreadMessage[]
+
+  @@unique([pingId, responderId])
+  @@index([pingId])
+}
+
+model ThreadMessage {
+  id        String     @id @default(uuid())
+  threadId  String
+  thread    PingThread @relation(fields: [threadId], references: [id])
+  senderId  String
+  message   String
+  imageUrl  String?
+  createdAt DateTime   @default(now())
+
+  @@index([threadId, createdAt])
+}
+
+// El radio de escucha es una preferencia del usuario ("qué tanto quiero
+// que me fastidien"), no una propiedad del ping. Un ping te "alcanza" si
+// tu círculo de escucha y el círculo de alcance del ping se tocan —
+// ver PrismaUserLocatorRepository y PrismaPingRepository.findColliding.
+model UserLastLocation {
+  userId               String   @id
+  pushToken            String
+  location             Unsupported("geography(Point, 4326)")
+  listeningRadiusMeters Int     @default(200)
+  updatedAt            DateTime @updatedAt
+}

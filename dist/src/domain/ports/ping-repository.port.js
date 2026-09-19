@@ -1,0 +1,4 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PING_REPOSITORY = void 0;
+exports.PING_REPOSITORY = Symbol('PING_REPOSITORY');
