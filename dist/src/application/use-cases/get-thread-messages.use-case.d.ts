@@ -4,6 +4,7 @@ import { ThreadMessageRepositoryPort } from '../../domain/ports/thread-message-r
 import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
 export interface ThreadDetailView {
     pingId: string;
+    pingMessage: string;
     responderId: string;
     otherParticipantName: string;
     messages: {

@@ -14,6 +14,7 @@ const auth_controller_1 = require("./auth.controller");
 const register_user_use_case_1 = require("../../application/use-cases/register-user.use-case");
 const login_user_use_case_1 = require("../../application/use-cases/login-user.use-case");
 const login_with_google_use_case_1 = require("../../application/use-cases/login-with-google.use-case");
+const update_display_name_use_case_1 = require("../../application/use-cases/update-display-name.use-case");
 const user_repository_port_1 = require("../../domain/ports/user-repository.port");
 const prisma_user_repository_1 = require("../persistence/prisma-user.repository");
 const jwt_strategy_1 = require("../auth/jwt.strategy");
@@ -34,6 +35,7 @@ exports.AuthModule = AuthModule = __decorate([
             register_user_use_case_1.RegisterUserUseCase,
             login_user_use_case_1.LoginUserUseCase,
             login_with_google_use_case_1.LoginWithGoogleUseCase,
+            update_display_name_use_case_1.UpdateDisplayNameUseCase,
             jwt_strategy_1.JwtStrategy,
             { provide: user_repository_port_1.USER_REPOSITORY, useClass: prisma_user_repository_1.PrismaUserRepository },
         ],

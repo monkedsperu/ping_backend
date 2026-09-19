@@ -7,6 +7,10 @@ import {
   PING_THREAD_REPOSITORY,
   PingThreadRepositoryPort,
 } from '../../domain/ports/ping-thread-repository.port';
+import {
+  PING_VIEW_REPOSITORY,
+  PingViewRepositoryPort,
+} from '../../domain/ports/ping-view-repository.port';
 
 export interface MyPingView {
   id: string;
@@ -19,6 +23,7 @@ export interface MyPingView {
   status: string;
   isActive: boolean;
   threadCount: number;
+  viewCount: number;
 }
 
 /**
@@ -32,6 +37,8 @@ export class GetMyPingsUseCase {
     @Inject(PING_REPOSITORY) private readonly pingRepository: PingRepositoryPort,
     @Inject(PING_THREAD_REPOSITORY)
     private readonly threadRepository: PingThreadRepositoryPort,
+    @Inject(PING_VIEW_REPOSITORY)
+    private readonly pingViewRepository: PingViewRepositoryPort,
   ) {}
 
   async execute(authorId: string): Promise<MyPingView[]> {
@@ -40,7 +47,10 @@ export class GetMyPingsUseCase {
 
     return Promise.all(
       pings.map(async (ping) => {
-        const threads = await this.threadRepository.findByPingId(ping.id);
+        const [threads, viewCount] = await Promise.all([
+          this.threadRepository.findByPingId(ping.id),
+          this.pingViewRepository.countViews(ping.id),
+        ]);
         const p = ping.toProps();
         return {
           id: p.id,
@@ -53,6 +63,7 @@ export class GetMyPingsUseCase {
           status: p.status,
           isActive: ping.isActive(now),
           threadCount: threads.length,
+          viewCount,
         };
       }),
     );

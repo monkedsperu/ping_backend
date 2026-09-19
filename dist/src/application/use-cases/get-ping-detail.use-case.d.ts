@@ -1,10 +1,13 @@
 import { PingRepositoryPort } from '../../domain/ports/ping-repository.port';
+import { PingViewRepositoryPort } from '../../domain/ports/ping-view-repository.port';
+import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
 export interface PingDetailView {
     id: string;
     message: string;
     imageUrl?: string;
     color?: string;
     authorId: string;
+    authorName: string;
     latitude: number;
     longitude: number;
     radiusMeters: number;
@@ -12,13 +15,12 @@ export interface PingDetailView {
     expiresAt: Date;
     status: string;
     isOwnPing: boolean;
+    viewCount: number;
 }
-/**
- * viewerId puede ser null (alguien navegando sin sesión). En ese caso
- * isOwnPing siempre es false — nadie sin cuenta puede ser autor de nada.
- */
 export declare class GetPingDetailUseCase {
     private readonly pingRepository;
-    constructor(pingRepository: PingRepositoryPort);
+    private readonly pingViewRepository;
+    private readonly userRepository;
+    constructor(pingRepository: PingRepositoryPort, pingViewRepository: PingViewRepositoryPort, userRepository: UserRepositoryPort);
     execute(pingId: string, viewerId: string | null): Promise<PingDetailView>;
 }

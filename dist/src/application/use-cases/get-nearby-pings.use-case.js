@@ -17,30 +17,36 @@ const common_1 = require("@nestjs/common");
 const geo_point_vo_1 = require("../../domain/value-objects/geo-point.vo");
 const ping_repository_port_1 = require("../../domain/ports/ping-repository.port");
 const ping_thread_repository_port_1 = require("../../domain/ports/ping-thread-repository.port");
+const user_repository_port_1 = require("../../domain/ports/user-repository.port");
 /**
  * viewerId es opcional (navegación sin cuenta). Solo cuando hay viewer
  * identificado calculamos isOwnPing/threadCount, y solo para SUS PROPIOS
  * pings — no tiene sentido consultar hilos de pings ajenos solo para
- * mostrar la lista.
+ * mostrar la lista. authorName sí se resuelve siempre, para todos.
  */
 let GetNearbyPingsUseCase = class GetNearbyPingsUseCase {
-    constructor(pingRepository, threadRepository) {
+    constructor(pingRepository, threadRepository, userRepository) {
         this.pingRepository = pingRepository;
         this.threadRepository = threadRepository;
+        this.userRepository = userRepository;
     }
     async execute(dto, viewerId) {
         const center = geo_point_vo_1.GeoPoint.create(dto.latitude, dto.longitude);
         const pings = await this.pingRepository.findCollidingWithListeningArea(center, dto.listeningRadiusMeters);
         const views = await Promise.all(pings.map(async (ping) => {
             const isOwnPing = viewerId !== null && ping.authorId === viewerId;
-            const threadCount = isOwnPing
-                ? (await this.threadRepository.findByPingId(ping.id)).length
-                : 0;
+            const [threadCount, author] = await Promise.all([
+                isOwnPing
+                    ? this.threadRepository.findByPingId(ping.id).then((t) => t.length)
+                    : Promise.resolve(0),
+                this.userRepository.findById(ping.authorId),
+            ]);
             return {
                 id: ping.id,
                 message: ping.message,
                 imageUrl: ping.imageUrl,
                 color: ping.color,
+                authorName: author?.displayName ?? 'Usuario',
                 latitude: ping.location.latitude,
                 longitude: ping.location.longitude,
                 radiusMeters: ping.radiusMeters,
@@ -59,5 +65,6 @@ exports.GetNearbyPingsUseCase = GetNearbyPingsUseCase = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)(ping_repository_port_1.PING_REPOSITORY)),
     __param(1, (0, common_1.Inject)(ping_thread_repository_port_1.PING_THREAD_REPOSITORY)),
-    __metadata("design:paramtypes", [Object, Object])
+    __param(2, (0, common_1.Inject)(user_repository_port_1.USER_REPOSITORY)),
+    __metadata("design:paramtypes", [Object, Object, Object])
 ], GetNearbyPingsUseCase);

@@ -2,7 +2,6 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { OAuth2Client } from 'google-auth-library';
 import { randomUUID } from 'crypto';
-import { User } from '../../domain/entities/user.entity';
 import { USER_REPOSITORY, UserRepositoryPort } from '../../domain/ports/user-repository.port';
 import { GoogleLoginDto } from '../dto/google-login.dto';
 import { AuthResult } from './register-user.use-case';
@@ -55,25 +54,13 @@ export class LoginWithGoogleUseCase {
     const displayName = payload.name ?? email.split('@')[0];
 
     let user = await this.userRepository.findByGoogleId(googleId);
-
     if (!user) {
-      // ¿Ya existe una cuenta con ese correo (creada con contraseña)?
-      // La vinculamos en vez de crear una cuenta duplicada.
-      const existingByEmail = await this.userRepository.findByEmail(email);
-      if (existingByEmail) {
-        existingByEmail.linkGoogleAccount(googleId);
-        await this.userRepository.save(existingByEmail);
-        user = existingByEmail;
-      } else {
-        user = User.create({
-          id: randomUUID(),
-          email,
-          googleId,
-          displayName,
-          now: new Date(),
-        });
-        await this.userRepository.save(user);
-      }
+      user = await this.userRepository.upsertGoogleAccount({
+        newId: randomUUID(),
+        email,
+        googleId,
+        displayName,
+      });
     }
 
     const accessToken = await this.jwtService.signAsync({ sub: user.id, email: user.email });

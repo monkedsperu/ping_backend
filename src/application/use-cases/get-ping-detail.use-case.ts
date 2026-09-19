@@ -3,6 +3,11 @@ import {
   PING_REPOSITORY,
   PingRepositoryPort,
 } from '../../domain/ports/ping-repository.port';
+import {
+  PING_VIEW_REPOSITORY,
+  PingViewRepositoryPort,
+} from '../../domain/ports/ping-view-repository.port';
+import { USER_REPOSITORY, UserRepositoryPort } from '../../domain/ports/user-repository.port';
 
 export interface PingDetailView {
   id: string;
@@ -10,6 +15,7 @@ export interface PingDetailView {
   imageUrl?: string;
   color?: string;
   authorId: string;
+  authorName: string;
   latitude: number;
   longitude: number;
   radiusMeters: number;
@@ -17,16 +23,15 @@ export interface PingDetailView {
   expiresAt: Date;
   status: string;
   isOwnPing: boolean;
+  viewCount: number;
 }
 
-/**
- * viewerId puede ser null (alguien navegando sin sesión). En ese caso
- * isOwnPing siempre es false — nadie sin cuenta puede ser autor de nada.
- */
 @Injectable()
 export class GetPingDetailUseCase {
   constructor(
     @Inject(PING_REPOSITORY) private readonly pingRepository: PingRepositoryPort,
+    @Inject(PING_VIEW_REPOSITORY) private readonly pingViewRepository: PingViewRepositoryPort,
+    @Inject(USER_REPOSITORY) private readonly userRepository: UserRepositoryPort,
   ) {}
 
   async execute(pingId: string, viewerId: string | null): Promise<PingDetailView> {
@@ -36,19 +41,31 @@ export class GetPingDetailUseCase {
     }
 
     const p = ping.toProps();
+    const isOwnPing = viewerId !== null && p.authorId === viewerId;
+
+    if (viewerId !== null && !isOwnPing) {
+      await this.pingViewRepository.recordView(pingId, viewerId);
+    }
+    const [viewCount, author] = await Promise.all([
+      this.pingViewRepository.countViews(pingId),
+      this.userRepository.findById(p.authorId),
+    ]);
+
     return {
       id: p.id,
       message: p.message,
       imageUrl: p.imageUrl,
       color: p.color,
       authorId: p.authorId,
+      authorName: author?.displayName ?? 'Usuario',
       latitude: p.location.latitude,
       longitude: p.location.longitude,
       radiusMeters: p.radiusMeters,
       createdAt: p.createdAt,
       expiresAt: p.expiresAt,
       status: p.status,
-      isOwnPing: viewerId !== null && p.authorId === viewerId,
+      isOwnPing,
+      viewCount,
     };
   }
 }

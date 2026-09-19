@@ -49,4 +49,12 @@ export class User {
   linkGoogleAccount(googleId: string): void {
     this.props.googleId = googleId;
   }
+
+  renameTo(newDisplayName: string): void {
+    const trimmed = newDisplayName.trim();
+    if (trimmed.length < 2 || trimmed.length > 30) {
+      throw new Error('El nombre debe tener entre 2 y 30 caracteres.');
+    }
+    this.props.displayName = trimmed;
+  }
 }

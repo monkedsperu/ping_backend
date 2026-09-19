@@ -12,6 +12,7 @@ import { USER_REPOSITORY, UserRepositoryPort } from '../../domain/ports/user-rep
 
 export interface ThreadDetailView {
   pingId: string;
+  pingMessage: string;
   responderId: string;
   otherParticipantName: string;
   messages: {
@@ -65,6 +66,7 @@ export class GetThreadMessagesUseCase {
 
     return {
       pingId,
+      pingMessage: ping.message,
       responderId: responderIdInThread,
       otherParticipantName: otherParticipant?.displayName ?? 'Usuario',
       messages: messages.map((m) => m.toProps()),

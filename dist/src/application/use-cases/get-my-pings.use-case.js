@@ -16,21 +16,26 @@ exports.GetMyPingsUseCase = void 0;
 const common_1 = require("@nestjs/common");
 const ping_repository_port_1 = require("../../domain/ports/ping-repository.port");
 const ping_thread_repository_port_1 = require("../../domain/ports/ping-thread-repository.port");
+const ping_view_repository_port_1 = require("../../domain/ports/ping-view-repository.port");
 /**
  * "Mis pings": tus conversaciones no deberían desaparecer solo porque tu
  * círculo de escucha ya no cubre un ping que pusiste en otro lado del
  * mapa. Esta lista es independiente de esa ubicación/radio actual.
  */
 let GetMyPingsUseCase = class GetMyPingsUseCase {
-    constructor(pingRepository, threadRepository) {
+    constructor(pingRepository, threadRepository, pingViewRepository) {
         this.pingRepository = pingRepository;
         this.threadRepository = threadRepository;
+        this.pingViewRepository = pingViewRepository;
     }
     async execute(authorId) {
         const pings = await this.pingRepository.findByAuthorId(authorId);
         const now = new Date();
         return Promise.all(pings.map(async (ping) => {
-            const threads = await this.threadRepository.findByPingId(ping.id);
+            const [threads, viewCount] = await Promise.all([
+                this.threadRepository.findByPingId(ping.id),
+                this.pingViewRepository.countViews(ping.id),
+            ]);
             const p = ping.toProps();
             return {
                 id: p.id,
@@ -43,6 +48,7 @@ let GetMyPingsUseCase = class GetMyPingsUseCase {
                 status: p.status,
                 isActive: ping.isActive(now),
                 threadCount: threads.length,
+                viewCount,
             };
         }));
     }
@@ -52,5 +58,6 @@ exports.GetMyPingsUseCase = GetMyPingsUseCase = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)(ping_repository_port_1.PING_REPOSITORY)),
     __param(1, (0, common_1.Inject)(ping_thread_repository_port_1.PING_THREAD_REPOSITORY)),
-    __metadata("design:paramtypes", [Object, Object])
+    __param(2, (0, common_1.Inject)(ping_view_repository_port_1.PING_VIEW_REPOSITORY)),
+    __metadata("design:paramtypes", [Object, Object, Object])
 ], GetMyPingsUseCase);

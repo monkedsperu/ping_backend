@@ -25,4 +25,5 @@ export declare class User {
     get displayName(): string;
     get createdAt(): Date;
     linkGoogleAccount(googleId: string): void;
+    renameTo(newDisplayName: string): void;
 }

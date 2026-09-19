@@ -40,6 +40,29 @@ export class PrismaUserRepository implements UserRepositoryPort {
     return row ? this.toDomain(row) : null;
   }
 
+  async upsertGoogleAccount(input: {
+    newId: string;
+    email: string;
+    googleId: string;
+    displayName: string;
+  }): Promise<User> {
+    const row = await this.prisma.user.upsert({
+      where: { email: input.email },
+      create: {
+        id: input.newId,
+        email: input.email,
+        googleId: input.googleId,
+        displayName: input.displayName,
+        passwordHash: null,
+      },
+      // Si ya existía (creado antes con contraseña, o un intento previo
+      // de Google), solo vinculamos el googleId — no pisamos el nombre
+      // ni la contraseña que ya tenía.
+      update: { googleId: input.googleId },
+    });
+    return this.toDomain(row);
+  }
+
   private toDomain(row: {
     id: string;
     email: string;

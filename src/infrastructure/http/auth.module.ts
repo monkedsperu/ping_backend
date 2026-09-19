@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case';
 import { LoginUserUseCase } from '../../application/use-cases/login-user.use-case';
 import { LoginWithGoogleUseCase } from '../../application/use-cases/login-with-google.use-case';
+import { UpdateDisplayNameUseCase } from '../../application/use-cases/update-display-name.use-case';
 import { USER_REPOSITORY } from '../../domain/ports/user-repository.port';
 import { PrismaUserRepository } from '../persistence/prisma-user.repository';
 import { JwtStrategy } from '../auth/jwt.strategy';
@@ -22,6 +23,7 @@ import { JwtStrategy } from '../auth/jwt.strategy';
     RegisterUserUseCase,
     LoginUserUseCase,
     LoginWithGoogleUseCase,
+    UpdateDisplayNameUseCase,
     JwtStrategy,
     { provide: USER_REPOSITORY, useClass: PrismaUserRepository },
   ],

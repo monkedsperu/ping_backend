@@ -17,7 +17,6 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const google_auth_library_1 = require("google-auth-library");
 const crypto_1 = require("crypto");
-const user_entity_1 = require("../../domain/entities/user.entity");
 const user_repository_port_1 = require("../../domain/ports/user-repository.port");
 /**
  * Los 3 client IDs (web/iOS/Android) son "audiencias" válidas — Google
@@ -59,24 +58,12 @@ let LoginWithGoogleUseCase = class LoginWithGoogleUseCase {
         const displayName = payload.name ?? email.split('@')[0];
         let user = await this.userRepository.findByGoogleId(googleId);
         if (!user) {
-            // ¿Ya existe una cuenta con ese correo (creada con contraseña)?
-            // La vinculamos en vez de crear una cuenta duplicada.
-            const existingByEmail = await this.userRepository.findByEmail(email);
-            if (existingByEmail) {
-                existingByEmail.linkGoogleAccount(googleId);
-                await this.userRepository.save(existingByEmail);
-                user = existingByEmail;
-            }
-            else {
-                user = user_entity_1.User.create({
-                    id: (0, crypto_1.randomUUID)(),
-                    email,
-                    googleId,
-                    displayName,
-                    now: new Date(),
-                });
-                await this.userRepository.save(user);
-            }
+            user = await this.userRepository.upsertGoogleAccount({
+                newId: (0, crypto_1.randomUUID)(),
+                email,
+                googleId,
+                displayName,
+            });
         }
         const accessToken = await this.jwtService.signAsync({ sub: user.id, email: user.email });
         return { accessToken, userId: user.id, displayName: user.displayName };
