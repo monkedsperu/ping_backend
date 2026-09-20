@@ -1,6 +1,7 @@
 import { PingRepositoryPort } from '../../domain/ports/ping-repository.port';
 import { PingThreadRepositoryPort } from '../../domain/ports/ping-thread-repository.port';
 import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
+import { SettingsRepositoryPort } from '../../domain/ports/settings-repository.port';
 import { GetNearbyPingsDto } from '../dto/get-nearby-pings.dto';
 export interface NearbyPingView {
     id: string;
@@ -8,6 +9,7 @@ export interface NearbyPingView {
     imageUrl?: string;
     color?: string;
     authorName: string;
+    authorRole: string;
     latitude: number;
     longitude: number;
     radiusMeters: number;
@@ -27,6 +29,7 @@ export declare class GetNearbyPingsUseCase {
     private readonly pingRepository;
     private readonly threadRepository;
     private readonly userRepository;
-    constructor(pingRepository: PingRepositoryPort, threadRepository: PingThreadRepositoryPort, userRepository: UserRepositoryPort);
+    private readonly settingsRepository;
+    constructor(pingRepository: PingRepositoryPort, threadRepository: PingThreadRepositoryPort, userRepository: UserRepositoryPort, settingsRepository: SettingsRepositoryPort);
     execute(dto: GetNearbyPingsDto, viewerId: string | null): Promise<NearbyPingView[]>;
 }

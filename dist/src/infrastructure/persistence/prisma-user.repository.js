@@ -26,11 +26,15 @@ let PrismaUserRepository = class PrismaUserRepository {
                 passwordHash: user.passwordHash ?? null,
                 googleId: user.googleId ?? null,
                 displayName: user.displayName,
+                role: user.role,
+                isDisabled: user.isDisabled,
                 createdAt: user.createdAt,
             },
             update: {
                 displayName: user.displayName,
                 googleId: user.googleId ?? null,
+                role: user.role,
+                isDisabled: user.isDisabled,
             },
         });
     }
@@ -46,6 +50,10 @@ let PrismaUserRepository = class PrismaUserRepository {
         const row = await this.prisma.user.findUnique({ where: { googleId } });
         return row ? this.toDomain(row) : null;
     }
+    async findAll() {
+        const rows = await this.prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
+        return rows.map((row) => this.toDomain(row));
+    }
     async upsertGoogleAccount(input) {
         const row = await this.prisma.user.upsert({
             where: { email: input.email },
@@ -56,9 +64,6 @@ let PrismaUserRepository = class PrismaUserRepository {
                 displayName: input.displayName,
                 passwordHash: null,
             },
-            // Si ya existía (creado antes con contraseña, o un intento previo
-            // de Google), solo vinculamos el googleId — no pisamos el nombre
-            // ni la contraseña que ya tenía.
             update: { googleId: input.googleId },
         });
         return this.toDomain(row);
@@ -70,6 +75,8 @@ let PrismaUserRepository = class PrismaUserRepository {
             passwordHash: row.passwordHash ?? undefined,
             googleId: row.googleId ?? undefined,
             displayName: row.displayName,
+            role: row.role,
+            isDisabled: row.isDisabled,
             createdAt: row.createdAt,
         });
     }

@@ -21,6 +21,7 @@ const get_thread_messages_use_case_1 = require("../../application/use-cases/get-
 const ping_repository_port_1 = require("../../domain/ports/ping-repository.port");
 const ping_thread_repository_port_1 = require("../../domain/ports/ping-thread-repository.port");
 const ping_view_repository_port_1 = require("../../domain/ports/ping-view-repository.port");
+const settings_repository_port_1 = require("../../domain/ports/settings-repository.port");
 const thread_message_repository_port_1 = require("../../domain/ports/thread-message-repository.port");
 const user_repository_port_1 = require("../../domain/ports/user-repository.port");
 const user_locator_port_1 = require("../../domain/ports/user-locator.port");
@@ -28,6 +29,7 @@ const notification_port_1 = require("../../domain/ports/notification.port");
 const prisma_ping_repository_1 = require("../persistence/prisma-ping.repository");
 const prisma_ping_thread_repository_1 = require("../persistence/prisma-ping-thread.repository");
 const prisma_ping_view_repository_1 = require("../persistence/prisma-ping-view.repository");
+const prisma_settings_repository_1 = require("../persistence/prisma-settings.repository");
 const prisma_thread_message_repository_1 = require("../persistence/prisma-thread-message.repository");
 const prisma_user_repository_1 = require("../persistence/prisma-user.repository");
 const prisma_user_locator_repository_1 = require("../persistence/prisma-user-locator.repository");
@@ -56,6 +58,7 @@ exports.PingModule = PingModule = __decorate([
             { provide: ping_repository_port_1.PING_REPOSITORY, useClass: prisma_ping_repository_1.PrismaPingRepository },
             { provide: ping_thread_repository_port_1.PING_THREAD_REPOSITORY, useClass: prisma_ping_thread_repository_1.PrismaPingThreadRepository },
             { provide: ping_view_repository_port_1.PING_VIEW_REPOSITORY, useClass: prisma_ping_view_repository_1.PrismaPingViewRepository },
+            { provide: settings_repository_port_1.SETTINGS_REPOSITORY, useClass: prisma_settings_repository_1.PrismaSettingsRepository },
             { provide: thread_message_repository_port_1.THREAD_MESSAGE_REPOSITORY, useClass: prisma_thread_message_repository_1.PrismaThreadMessageRepository },
             { provide: user_repository_port_1.USER_REPOSITORY, useClass: prisma_user_repository_1.PrismaUserRepository },
             { provide: user_locator_port_1.USER_LOCATOR, useClass: prisma_user_locator_repository_1.PrismaUserLocatorRepository },

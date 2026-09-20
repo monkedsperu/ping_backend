@@ -1,9 +1,13 @@
+export type UserRole = 'user' | 'premium' | 'mod' | 'admin';
+
 export interface UserProps {
   id: string;
   email: string;
   passwordHash?: string; // nulo para cuentas creadas por Google
   googleId?: string;
   displayName: string;
+  role: UserRole;
+  isDisabled: boolean;
   createdAt: Date;
 }
 
@@ -31,6 +35,8 @@ export class User {
       passwordHash: input.passwordHash,
       googleId: input.googleId,
       displayName,
+      role: 'user',
+      isDisabled: false,
       createdAt: input.now,
     });
   }
@@ -44,6 +50,9 @@ export class User {
   get passwordHash() { return this.props.passwordHash; }
   get googleId() { return this.props.googleId; }
   get displayName() { return this.props.displayName; }
+  get role() { return this.props.role; }
+  get isAdmin() { return this.props.role === 'admin'; }
+  get isDisabled() { return this.props.isDisabled; }
   get createdAt() { return this.props.createdAt; }
 
   linkGoogleAccount(googleId: string): void {
@@ -56,5 +65,17 @@ export class User {
       throw new Error('El nombre debe tener entre 2 y 30 caracteres.');
     }
     this.props.displayName = trimmed;
+  }
+
+  disable(): void {
+    this.props.isDisabled = true;
+  }
+
+  enable(): void {
+    this.props.isDisabled = false;
+  }
+
+  setRole(role: UserRole): void {
+    this.props.role = role;
   }
 }

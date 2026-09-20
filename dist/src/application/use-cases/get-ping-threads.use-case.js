@@ -42,6 +42,7 @@ let GetPingThreadsUseCase = class GetPingThreadsUseCase {
             return {
                 responderId: thread.responderId,
                 responderName: responder?.displayName ?? 'Usuario',
+                responderRole: responder?.role ?? 'user',
                 lastMessage: lastMessage?.toProps().message ?? '',
                 lastMessageAt: lastMessage?.toProps().createdAt ?? thread.createdAt,
             };

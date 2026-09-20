@@ -4,8 +4,9 @@ import { AuthModule } from './infrastructure/http/auth.module';
 import { PingModule } from './infrastructure/http/ping.module';
 import { UploadsModule } from './infrastructure/http/uploads.module';
 import { UserModule } from './infrastructure/http/user.module';
+import { AdminModule } from './infrastructure/http/admin.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, PingModule, UploadsModule, UserModule],
+  imports: [PrismaModule, AuthModule, PingModule, UploadsModule, UserModule, AdminModule],
 })
 export class AppModule {}

@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GetNearbyPingsDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
-const report_location_dto_1 = require("./report-location.dto");
 class GetNearbyPingsDto {
 }
 exports.GetNearbyPingsDto = GetNearbyPingsDto;
@@ -28,6 +27,8 @@ __decorate([
 ], GetNearbyPingsDto.prototype, "longitude", void 0);
 __decorate([
     (0, class_transformer_1.Type)(() => Number),
-    (0, class_validator_1.IsIn)(report_location_dto_1.ALLOWED_LISTENING_RADIUS_METERS),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(50000),
     __metadata("design:type", Number)
 ], GetNearbyPingsDto.prototype, "listeningRadiusMeters", void 0);

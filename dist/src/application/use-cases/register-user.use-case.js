@@ -73,7 +73,7 @@ let RegisterUserUseCase = class RegisterUserUseCase {
         });
         await this.userRepository.save(user);
         const accessToken = await this.jwtService.signAsync({ sub: user.id, email: user.email });
-        return { accessToken, userId: user.id, displayName: user.displayName };
+        return { accessToken, userId: user.id, displayName: user.displayName, role: user.role };
     }
 };
 exports.RegisterUserUseCase = RegisterUserUseCase;

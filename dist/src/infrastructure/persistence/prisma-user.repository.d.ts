@@ -8,6 +8,7 @@ export declare class PrismaUserRepository implements UserRepositoryPort {
     findByEmail(email: string): Promise<User | null>;
     findById(id: string): Promise<User | null>;
     findByGoogleId(googleId: string): Promise<User | null>;
+    findAll(): Promise<User[]>;
     upsertGoogleAccount(input: {
         newId: string;
         email: string;

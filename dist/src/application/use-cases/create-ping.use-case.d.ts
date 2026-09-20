@@ -2,6 +2,8 @@ import { Ping } from '../../domain/entities/ping.entity';
 import { PingRepositoryPort } from '../../domain/ports/ping-repository.port';
 import { UserLocatorPort } from '../../domain/ports/user-locator.port';
 import { NotificationPort } from '../../domain/ports/notification.port';
+import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
+import { SettingsRepositoryPort } from '../../domain/ports/settings-repository.port';
 import { CreatePingDto } from '../dto/create-ping.dto';
 export interface CreatePingResult {
     ping: Ping;
@@ -17,7 +19,9 @@ export declare class CreatePingUseCase {
     private readonly pingRepository;
     private readonly userLocator;
     private readonly notifier;
+    private readonly userRepository;
+    private readonly settingsRepository;
     private readonly logger;
-    constructor(pingRepository: PingRepositoryPort, userLocator: UserLocatorPort, notifier: NotificationPort);
+    constructor(pingRepository: PingRepositoryPort, userLocator: UserLocatorPort, notifier: NotificationPort, userRepository: UserRepositoryPort, settingsRepository: SettingsRepositoryPort);
     execute(dto: CreatePingDto, authorId: string): Promise<CreatePingResult>;
 }

@@ -2,6 +2,9 @@ import { CreatePingUseCase } from '../../src/application/use-cases/create-ping.u
 import { PingRepositoryPort } from '../../src/domain/ports/ping-repository.port';
 import { UserLocatorPort, NearbyUser } from '../../src/domain/ports/user-locator.port';
 import { NotificationPort, PushNotification } from '../../src/domain/ports/notification.port';
+import { UserRepositoryPort } from '../../src/domain/ports/user-repository.port';
+import { SettingsRepositoryPort } from '../../src/domain/ports/settings-repository.port';
+import { DEFAULT_ROLE_LIMITS, DEFAULT_MESSAGE_LIMITS } from '../../src/domain/entities/role-limits.defaults';
 import { Ping } from '../../src/domain/entities/ping.entity';
 
 /**
@@ -15,6 +18,7 @@ class FakePingRepository implements PingRepositoryPort {
   async findById() { return null; }
   async findByAuthorId() { return []; }
   async findCollidingWithListeningArea() { return []; }
+  async findAll() { return []; }
 }
 
 class FakeUserLocator implements UserLocatorPort {
@@ -27,6 +31,35 @@ class FakeNotifier implements NotificationPort {
   async sendBatch(notifications: PushNotification[]) {
     this.sent.push(...notifications);
   }
+}
+
+/** Rol 'user' por defecto — el 500m normal alcanza para estos tests. */
+class FakeUserRepository implements UserRepositoryPort {
+  async save() {}
+  async findByEmail() { return null; }
+  async findById() { return null; }
+  async findByGoogleId() { return null; }
+  async findAll() { return []; }
+  async upsertGoogleAccount(): Promise<any> {
+    throw new Error('no usado en estos tests');
+  }
+}
+
+/** Devuelve los mismos valores por defecto que usa el sistema real
+ * cuando el admin nunca configuró nada — así el test sigue probando el
+ * comportamiento "de fábrica". */
+class FakeSettingsRepository implements SettingsRepositoryPort {
+  async getRoleLimits(role: 'user' | 'premium' | 'mod' | 'admin') {
+    return DEFAULT_ROLE_LIMITS[role];
+  }
+  async getAllRoleLimits() {
+    return Object.values(DEFAULT_ROLE_LIMITS);
+  }
+  async saveRoleLimits() {}
+  async getMessageLimits() {
+    return DEFAULT_MESSAGE_LIMITS;
+  }
+  async saveMessageLimits() {}
 }
 
 describe('CreatePingUseCase', () => {
@@ -43,6 +76,8 @@ describe('CreatePingUseCase', () => {
       pingRepository,
       new FakeUserLocator(manyUsers),
       notifier,
+      new FakeUserRepository(),
+      new FakeSettingsRepository(),
     );
 
     const result = await useCase.execute(
@@ -64,6 +99,8 @@ describe('CreatePingUseCase', () => {
       new FakePingRepository(),
       new FakeUserLocator([]),
       new FakeNotifier(),
+      new FakeUserRepository(),
+      new FakeSettingsRepository(),
     );
 
     await expect(

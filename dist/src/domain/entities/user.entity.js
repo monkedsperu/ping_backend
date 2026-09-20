@@ -19,6 +19,8 @@ class User {
             passwordHash: input.passwordHash,
             googleId: input.googleId,
             displayName,
+            role: 'user',
+            isDisabled: false,
             createdAt: input.now,
         });
     }
@@ -30,6 +32,9 @@ class User {
     get passwordHash() { return this.props.passwordHash; }
     get googleId() { return this.props.googleId; }
     get displayName() { return this.props.displayName; }
+    get role() { return this.props.role; }
+    get isAdmin() { return this.props.role === 'admin'; }
+    get isDisabled() { return this.props.isDisabled; }
     get createdAt() { return this.props.createdAt; }
     linkGoogleAccount(googleId) {
         this.props.googleId = googleId;
@@ -40,6 +45,15 @@ class User {
             throw new Error('El nombre debe tener entre 2 y 30 caracteres.');
         }
         this.props.displayName = trimmed;
+    }
+    disable() {
+        this.props.isDisabled = true;
+    }
+    enable() {
+        this.props.isDisabled = false;
+    }
+    setRole(role) {
+        this.props.role = role;
     }
 }
 exports.User = User;

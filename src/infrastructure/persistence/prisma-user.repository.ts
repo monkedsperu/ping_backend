@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { User } from '../../domain/entities/user.entity';
+import { User, UserRole } from '../../domain/entities/user.entity';
 import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
 
 @Injectable()
@@ -16,11 +16,15 @@ export class PrismaUserRepository implements UserRepositoryPort {
         passwordHash: user.passwordHash ?? null,
         googleId: user.googleId ?? null,
         displayName: user.displayName,
+        role: user.role,
+        isDisabled: user.isDisabled,
         createdAt: user.createdAt,
       },
       update: {
         displayName: user.displayName,
         googleId: user.googleId ?? null,
+        role: user.role,
+        isDisabled: user.isDisabled,
       },
     });
   }
@@ -40,6 +44,11 @@ export class PrismaUserRepository implements UserRepositoryPort {
     return row ? this.toDomain(row) : null;
   }
 
+  async findAll(): Promise<User[]> {
+    const rows = await this.prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
+    return rows.map((row) => this.toDomain(row));
+  }
+
   async upsertGoogleAccount(input: {
     newId: string;
     email: string;
@@ -55,9 +64,6 @@ export class PrismaUserRepository implements UserRepositoryPort {
         displayName: input.displayName,
         passwordHash: null,
       },
-      // Si ya existía (creado antes con contraseña, o un intento previo
-      // de Google), solo vinculamos el googleId — no pisamos el nombre
-      // ni la contraseña que ya tenía.
       update: { googleId: input.googleId },
     });
     return this.toDomain(row);
@@ -69,6 +75,8 @@ export class PrismaUserRepository implements UserRepositoryPort {
     passwordHash: string | null;
     googleId: string | null;
     displayName: string;
+    role: string;
+    isDisabled: boolean;
     createdAt: Date;
   }): User {
     return User.reconstitute({
@@ -77,6 +85,8 @@ export class PrismaUserRepository implements UserRepositoryPort {
       passwordHash: row.passwordHash ?? undefined,
       googleId: row.googleId ?? undefined,
       displayName: row.displayName,
+      role: row.role as UserRole,
+      isDisabled: row.isDisabled,
       createdAt: row.createdAt,
     });
   }

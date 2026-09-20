@@ -12,13 +12,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreatePingDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
-const ping_entity_1 = require("../../domain/entities/ping.entity");
+// Validación de FORMA solamente (tipo, rango razonable) — cuáles valores
+// exactos están permitidos depende del rol del autor y de la
+// configuración del admin, así que esa regla vive en CreatePingUseCase /
+// Ping.create(), no aquí.
 class CreatePingDto {
 }
 exports.CreatePingDto = CreatePingDto;
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.Length)(5, 280),
+    (0, class_validator_1.Length)(1, 1000),
     __metadata("design:type", String)
 ], CreatePingDto.prototype, "message", void 0);
 __decorate([
@@ -42,12 +45,22 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_transformer_1.Type)(() => Number),
-    (0, class_validator_1.IsIn)(ping_entity_1.ALLOWED_RADIUS_METERS),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(20000),
     __metadata("design:type", Number)
 ], CreatePingDto.prototype, "radiusMeters", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_transformer_1.Type)(() => Number),
-    (0, class_validator_1.IsIn)(ping_entity_1.ALLOWED_DURATION_MINUTES),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(43200) // 30 días, tope absoluto de cordura
+    ,
     __metadata("design:type", Number)
 ], CreatePingDto.prototype, "durationMinutes", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreatePingDto.prototype, "isSocial", void 0);

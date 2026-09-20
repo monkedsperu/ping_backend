@@ -9,10 +9,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReportLocationDto = exports.ALLOWED_LISTENING_RADIUS_METERS = void 0;
+exports.ReportLocationDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
-exports.ALLOWED_LISTENING_RADIUS_METERS = [100, 200, 500, 1000, 2000];
+// Igual que en create-ping.dto.ts: solo forma/rango razonable. El
+// conjunto EXACTO permitido según el rol vive en ReportLocationUseCase.
 class ReportLocationDto {
 }
 exports.ReportLocationDto = ReportLocationDto;
@@ -30,6 +31,8 @@ __decorate([
 ], ReportLocationDto.prototype, "longitude", void 0);
 __decorate([
     (0, class_transformer_1.Type)(() => Number),
-    (0, class_validator_1.IsIn)(exports.ALLOWED_LISTENING_RADIUS_METERS),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(50000),
     __metadata("design:type", Number)
 ], ReportLocationDto.prototype, "listeningRadiusMeters", void 0);

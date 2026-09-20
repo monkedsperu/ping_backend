@@ -8,6 +8,7 @@ export declare class PrismaPingRepository implements PingRepositoryPort {
     save(ping: Ping): Promise<void>;
     findById(id: string): Promise<Ping | null>;
     findByAuthorId(authorId: string): Promise<Ping[]>;
+    findAll(): Promise<Ping[]>;
     findCollidingWithListeningArea(center: GeoPoint, listeningRadiusMeters: number): Promise<Ping[]>;
     private toDomain;
 }

@@ -13,6 +13,7 @@ interface PingRow {
   latitude: number;
   longitude: number;
   radiusMeters: number;
+  isSocial: boolean;
   maxRecipients: number;
   deliveredCount: number;
   status: string;
@@ -24,7 +25,7 @@ const SELECT_COLUMNS = `
   id, "authorId", message, "imageUrl", color,
   ST_Y(location::geometry) as latitude,
   ST_X(location::geometry) as longitude,
-  "radiusMeters", "maxRecipients", "deliveredCount",
+  "radiusMeters", "isSocial", "maxRecipients", "deliveredCount",
   status, "createdAt", "expiresAt"
 `;
 
@@ -37,12 +38,12 @@ export class PrismaPingRepository implements PingRepositoryPort {
     await this.prisma.$executeRaw`
       INSERT INTO "Ping" (
         id, "authorId", message, "imageUrl", color, location,
-        "radiusMeters", "maxRecipients", "deliveredCount",
+        "radiusMeters", "isSocial", "maxRecipients", "deliveredCount",
         status, "createdAt", "expiresAt"
       ) VALUES (
         ${p.id}, ${p.authorId}, ${p.message}, ${p.imageUrl ?? null}, ${p.color ?? null},
         ST_SetSRID(ST_MakePoint(${p.location.longitude}, ${p.location.latitude}), 4326)::geography,
-        ${p.radiusMeters}, ${p.maxRecipients}, ${p.deliveredCount},
+        ${p.radiusMeters}, ${p.isSocial}, ${p.maxRecipients}, ${p.deliveredCount},
         ${p.status}, ${p.createdAt}, ${p.expiresAt}
       )
       ON CONFLICT (id) DO UPDATE SET
@@ -67,6 +68,13 @@ export class PrismaPingRepository implements PingRepositoryPort {
     return rows.map((row) => this.toDomain(row));
   }
 
+  async findAll(): Promise<Ping[]> {
+    const rows = await this.prisma.$queryRawUnsafe<PingRow[]>(
+      `SELECT ${SELECT_COLUMNS} FROM "Ping" ORDER BY "createdAt" DESC LIMIT 500;`,
+    );
+    return rows.map((row) => this.toDomain(row));
+  }
+
   async findCollidingWithListeningArea(
     center: GeoPoint,
     listeningRadiusMeters: number,
@@ -78,7 +86,7 @@ export class PrismaPingRepository implements PingRepositoryPort {
       SELECT id, "authorId", message, "imageUrl", color,
              ST_Y(location::geometry) as latitude,
              ST_X(location::geometry) as longitude,
-             "radiusMeters", "maxRecipients", "deliveredCount",
+             "radiusMeters", "isSocial", "maxRecipients", "deliveredCount",
              status, "createdAt", "expiresAt"
       FROM "Ping"
       WHERE status = 'active'
@@ -102,6 +110,7 @@ export class PrismaPingRepository implements PingRepositoryPort {
       color: row.color ?? undefined,
       location: GeoPoint.create(row.latitude, row.longitude),
       radiusMeters: row.radiusMeters,
+      isSocial: row.isSocial,
       maxRecipients: row.maxRecipients,
       deliveredCount: row.deliveredCount,
       createdAt: row.createdAt,

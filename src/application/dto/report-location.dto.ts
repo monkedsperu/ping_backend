@@ -1,8 +1,8 @@
-import { IsIn, IsLatitude, IsLongitude, IsString } from 'class-validator';
+import { IsInt, IsLatitude, IsLongitude, IsString, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export const ALLOWED_LISTENING_RADIUS_METERS = [100, 200, 500, 1000, 2000] as const;
-
+// Igual que en create-ping.dto.ts: solo forma/rango razonable. El
+// conjunto EXACTO permitido según el rol vive en ReportLocationUseCase.
 export class ReportLocationDto {
   @IsString()
   pushToken!: string;
@@ -14,6 +14,8 @@ export class ReportLocationDto {
   longitude!: number;
 
   @Type(() => Number)
-  @IsIn(ALLOWED_LISTENING_RADIUS_METERS)
+  @IsInt()
+  @Min(1)
+  @Max(50000)
   listeningRadiusMeters!: number;
 }

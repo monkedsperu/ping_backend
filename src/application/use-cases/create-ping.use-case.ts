@@ -14,6 +14,12 @@ import {
   NOTIFICATION_SENDER,
   NotificationPort,
 } from '../../domain/ports/notification.port';
+import { USER_REPOSITORY, UserRepositoryPort } from '../../domain/ports/user-repository.port';
+import {
+  SETTINGS_REPOSITORY,
+  SettingsRepositoryPort,
+} from '../../domain/ports/settings-repository.port';
+import { SOCIAL_PING_RADII } from '../../domain/entities/role-limits.defaults';
 import { CreatePingDto } from '../dto/create-ping.dto';
 
 export interface CreatePingResult {
@@ -35,10 +41,25 @@ export class CreatePingUseCase {
     @Inject(PING_REPOSITORY) private readonly pingRepository: PingRepositoryPort,
     @Inject(USER_LOCATOR) private readonly userLocator: UserLocatorPort,
     @Inject(NOTIFICATION_SENDER) private readonly notifier: NotificationPort,
+    @Inject(USER_REPOSITORY) private readonly userRepository: UserRepositoryPort,
+    @Inject(SETTINGS_REPOSITORY) private readonly settingsRepository: SettingsRepositoryPort,
   ) {}
 
   async execute(dto: CreatePingDto, authorId: string): Promise<CreatePingResult> {
     const location = GeoPoint.create(dto.latitude, dto.longitude);
+    const author = await this.userRepository.findById(authorId);
+    const role = author?.role ?? 'user';
+
+    const [roleLimits, messageLimits] = await Promise.all([
+      this.settingsRepository.getRoleLimits(role),
+      this.settingsRepository.getMessageLimits(),
+    ]);
+
+    // Un anuncio social usa el rango extendido de PRODUCTO (fijo, no
+    // configurable), sin importar qué tenga configurado el rol del autor
+    // — así, aunque un admin achique el rango de "user", reportar algo
+    // como una persona perdida sigue funcionando igual.
+    const allowedRadii = dto.isSocial ? SOCIAL_PING_RADII : roleLimits.allowedPingRadii;
 
     const ping = Ping.create({
       id: randomUUID(),
@@ -49,7 +70,12 @@ export class CreatePingUseCase {
       location,
       radiusMeters: dto.radiusMeters,
       durationMinutes: dto.durationMinutes,
+      isSocial: dto.isSocial,
       now: new Date(),
+      allowedRadii,
+      allowedDurations: roleLimits.allowedDurations,
+      minMessageLength: messageLimits.minMessageLength,
+      maxMessageLength: messageLimits.maxMessageLength,
     });
 
     await this.pingRepository.save(ping);

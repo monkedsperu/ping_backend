@@ -8,6 +8,7 @@ export interface PingDetailView {
     color?: string;
     authorId: string;
     authorName: string;
+    authorRole: string;
     latitude: number;
     longitude: number;
     radiusMeters: number;

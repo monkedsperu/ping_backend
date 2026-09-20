@@ -21,6 +21,9 @@ export interface PingRepositoryPort {
     center: GeoPoint,
     listeningRadiusMeters: number,
   ): Promise<Ping[]>;
+
+  /** Todos los pings, sin filtro geográfico — solo para el panel de admin. */
+  findAll(): Promise<Ping[]>;
 }
 
 export const PING_REPOSITORY = Symbol('PING_REPOSITORY');

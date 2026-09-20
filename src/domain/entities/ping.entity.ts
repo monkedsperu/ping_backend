@@ -10,6 +10,7 @@ export interface PingProps {
   color?: string;
   location: GeoPoint;
   radiusMeters: number;
+  isSocial: boolean;
   maxRecipients: number;
   deliveredCount: number;
   createdAt: Date;
@@ -17,27 +18,21 @@ export interface PingProps {
   status: PingStatus;
 }
 
-/**
- * Reglas del MVP: tope de destinatarios sigue fijo (sin planes pagos),
- * pero radio y duración ahora son elegibles dentro de conjuntos
- * cerrados de valores — no cualquier número.
- */
-export const ALLOWED_RADIUS_METERS = [50, 100, 200, 300, 400, 500] as const;
-export type AllowedRadiusMeters = (typeof ALLOWED_RADIUS_METERS)[number];
-const DEFAULT_RADIUS_METERS: AllowedRadiusMeters = 100;
-
-export const ALLOWED_DURATION_MINUTES = [5, 15, 30, 60, 360, 1440] as const; // 5/15/30min, 1h, 6h, 24h
-export type AllowedDurationMinutes = (typeof ALLOWED_DURATION_MINUTES)[number];
-const DEFAULT_DURATION_MINUTES: AllowedDurationMinutes = 60;
-
 const HEX_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
 const MVP_MAX_RECIPIENTS = 20;
-const MIN_MESSAGE_LENGTH = 5;
-const MAX_MESSAGE_LENGTH = 280;
+const DEFAULT_RADIUS_METERS = 100;
+const DEFAULT_DURATION_MINUTES = 60;
 
 export class Ping {
   private constructor(private props: PingProps) {}
 
+  /**
+   * Los conjuntos permitidos (radios, duraciones, largo del mensaje) ya
+   * NO están fijos acá — los trae el caso de uso desde la configuración
+   * (ver settings-repository.port.ts), que a su vez depende del rol del
+   * autor. Esta entidad solo valida que el resultado esté dentro de lo
+   * que le pasaron, sin saber de dónde salió esa lista.
+   */
   static create(input: {
     id: string;
     authorId: string;
@@ -47,13 +42,18 @@ export class Ping {
     location: GeoPoint;
     radiusMeters?: number;
     durationMinutes?: number;
+    isSocial?: boolean;
     now: Date;
+    allowedRadii: number[];
+    allowedDurations: number[];
+    minMessageLength: number;
+    maxMessageLength: number;
   }): Ping {
     const trimmed = input.message.trim();
-    if (trimmed.length < MIN_MESSAGE_LENGTH) {
+    if (trimmed.length < input.minMessageLength) {
       throw new Error('El mensaje del ping es muy corto.');
     }
-    if (trimmed.length > MAX_MESSAGE_LENGTH) {
+    if (trimmed.length > input.maxMessageLength) {
       throw new Error('El mensaje del ping excede el largo máximo.');
     }
 
@@ -61,17 +61,19 @@ export class Ping {
       throw new Error('El color debe ser un hex de 6 dígitos, ej. "#D85A30".');
     }
 
+    const isSocial = input.isSocial ?? false;
+
     const radiusMeters = input.radiusMeters ?? DEFAULT_RADIUS_METERS;
-    if (!ALLOWED_RADIUS_METERS.includes(radiusMeters as AllowedRadiusMeters)) {
+    if (!input.allowedRadii.includes(radiusMeters)) {
       throw new Error(
-        `Radio inválido: ${radiusMeters}. Debe ser uno de: ${ALLOWED_RADIUS_METERS.join(', ')}.`,
+        `Radio inválido: ${radiusMeters}. Debe ser uno de: ${input.allowedRadii.join(', ')}.`,
       );
     }
 
     const durationMinutes = input.durationMinutes ?? DEFAULT_DURATION_MINUTES;
-    if (!ALLOWED_DURATION_MINUTES.includes(durationMinutes as AllowedDurationMinutes)) {
+    if (!input.allowedDurations.includes(durationMinutes)) {
       throw new Error(
-        `Duración inválida: ${durationMinutes}. Debe ser una de: ${ALLOWED_DURATION_MINUTES.join(', ')} minutos.`,
+        `Duración inválida: ${durationMinutes}. Debe ser una de: ${input.allowedDurations.join(', ')} minutos.`,
       );
     }
 
@@ -85,6 +87,7 @@ export class Ping {
       color: input.color,
       location: input.location,
       radiusMeters,
+      isSocial,
       maxRecipients: MVP_MAX_RECIPIENTS,
       deliveredCount: 0,
       createdAt: input.now,
@@ -104,6 +107,7 @@ export class Ping {
   get color() { return this.props.color; }
   get location() { return this.props.location; }
   get radiusMeters() { return this.props.radiusMeters; }
+  get isSocial() { return this.props.isSocial; }
   get maxRecipients() { return this.props.maxRecipients; }
   get deliveredCount() { return this.props.deliveredCount; }
   get createdAt() { return this.props.createdAt; }

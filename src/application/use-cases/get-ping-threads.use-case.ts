@@ -13,6 +13,7 @@ import { USER_REPOSITORY, UserRepositoryPort } from '../../domain/ports/user-rep
 export interface ThreadSummaryView {
   responderId: string;
   responderName: string;
+  responderRole: string;
   lastMessage: string;
   lastMessageAt: Date;
 }
@@ -48,6 +49,7 @@ export class GetPingThreadsUseCase {
         return {
           responderId: thread.responderId,
           responderName: responder?.displayName ?? 'Usuario',
+          responderRole: responder?.role ?? 'user',
           lastMessage: lastMessage?.toProps().message ?? '',
           lastMessageAt: lastMessage?.toProps().createdAt ?? thread.createdAt,
         };

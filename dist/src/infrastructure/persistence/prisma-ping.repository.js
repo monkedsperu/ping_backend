@@ -18,7 +18,7 @@ const SELECT_COLUMNS = `
   id, "authorId", message, "imageUrl", color,
   ST_Y(location::geometry) as latitude,
   ST_X(location::geometry) as longitude,
-  "radiusMeters", "maxRecipients", "deliveredCount",
+  "radiusMeters", "isSocial", "maxRecipients", "deliveredCount",
   status, "createdAt", "expiresAt"
 `;
 let PrismaPingRepository = class PrismaPingRepository {
@@ -30,12 +30,12 @@ let PrismaPingRepository = class PrismaPingRepository {
         await this.prisma.$executeRaw `
       INSERT INTO "Ping" (
         id, "authorId", message, "imageUrl", color, location,
-        "radiusMeters", "maxRecipients", "deliveredCount",
+        "radiusMeters", "isSocial", "maxRecipients", "deliveredCount",
         status, "createdAt", "expiresAt"
       ) VALUES (
         ${p.id}, ${p.authorId}, ${p.message}, ${p.imageUrl ?? null}, ${p.color ?? null},
         ST_SetSRID(ST_MakePoint(${p.location.longitude}, ${p.location.latitude}), 4326)::geography,
-        ${p.radiusMeters}, ${p.maxRecipients}, ${p.deliveredCount},
+        ${p.radiusMeters}, ${p.isSocial}, ${p.maxRecipients}, ${p.deliveredCount},
         ${p.status}, ${p.createdAt}, ${p.expiresAt}
       )
       ON CONFLICT (id) DO UPDATE SET
@@ -51,6 +51,10 @@ let PrismaPingRepository = class PrismaPingRepository {
         const rows = await this.prisma.$queryRawUnsafe(`SELECT ${SELECT_COLUMNS} FROM "Ping" WHERE "authorId" = $1 ORDER BY "createdAt" DESC;`, authorId);
         return rows.map((row) => this.toDomain(row));
     }
+    async findAll() {
+        const rows = await this.prisma.$queryRawUnsafe(`SELECT ${SELECT_COLUMNS} FROM "Ping" ORDER BY "createdAt" DESC LIMIT 500;`);
+        return rows.map((row) => this.toDomain(row));
+    }
     async findCollidingWithListeningArea(center, listeningRadiusMeters) {
         // La distancia máxima para que "toquen" dos círculos es la SUMA de
         // sus radios: el de escucha del usuario, más el propio de cada ping
@@ -59,7 +63,7 @@ let PrismaPingRepository = class PrismaPingRepository {
       SELECT id, "authorId", message, "imageUrl", color,
              ST_Y(location::geometry) as latitude,
              ST_X(location::geometry) as longitude,
-             "radiusMeters", "maxRecipients", "deliveredCount",
+             "radiusMeters", "isSocial", "maxRecipients", "deliveredCount",
              status, "createdAt", "expiresAt"
       FROM "Ping"
       WHERE status = 'active'
@@ -82,6 +86,7 @@ let PrismaPingRepository = class PrismaPingRepository {
             color: row.color ?? undefined,
             location: geo_point_vo_1.GeoPoint.create(row.latitude, row.longitude),
             radiusMeters: row.radiusMeters,
+            isSocial: row.isSocial,
             maxRecipients: row.maxRecipients,
             deliveredCount: row.deliveredCount,
             createdAt: row.createdAt,

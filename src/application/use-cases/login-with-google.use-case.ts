@@ -63,7 +63,15 @@ export class LoginWithGoogleUseCase {
       });
     }
 
-    const accessToken = await this.jwtService.signAsync({ sub: user.id, email: user.email });
-    return { accessToken, userId: user.id, displayName: user.displayName };
+    if (user.isDisabled) {
+      throw new UnauthorizedException('Esta cuenta fue deshabilitada. Contacta al soporte.');
+    }
+
+    const accessToken = await this.jwtService.signAsync({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+    return { accessToken, userId: user.id, displayName: user.displayName, role: user.role };
   }
 }

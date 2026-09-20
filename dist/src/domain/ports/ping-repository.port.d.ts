@@ -16,5 +16,7 @@ export interface PingRepositoryPort {
      * de mí" — es colisión de dos círculos, cada ping con el suyo propio.
      */
     findCollidingWithListeningArea(center: GeoPoint, listeningRadiusMeters: number): Promise<Ping[]>;
+    /** Todos los pings, sin filtro geográfico — solo para el panel de admin. */
+    findAll(): Promise<Ping[]>;
 }
 export declare const PING_REPOSITORY: unique symbol;

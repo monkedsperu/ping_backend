@@ -5,8 +5,10 @@ import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
 export interface ThreadDetailView {
     pingId: string;
     pingMessage: string;
+    pingIsActive: boolean;
     responderId: string;
     otherParticipantName: string;
+    otherParticipantRole: string;
     messages: {
         id: string;
         senderId: string;

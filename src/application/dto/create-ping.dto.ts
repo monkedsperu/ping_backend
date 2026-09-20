@@ -1,10 +1,24 @@
-import { IsHexColor, IsIn, IsLatitude, IsLongitude, IsOptional, IsString, Length } from 'class-validator';
+import {
+  IsBoolean,
+  IsHexColor,
+  IsInt,
+  IsLatitude,
+  IsLongitude,
+  IsOptional,
+  IsString,
+  Length,
+  Max,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { ALLOWED_DURATION_MINUTES, ALLOWED_RADIUS_METERS } from '../../domain/entities/ping.entity';
 
+// Validación de FORMA solamente (tipo, rango razonable) — cuáles valores
+// exactos están permitidos depende del rol del autor y de la
+// configuración del admin, así que esa regla vive en CreatePingUseCase /
+// Ping.create(), no aquí.
 export class CreatePingDto {
   @IsString()
-  @Length(5, 280)
+  @Length(1, 1000)
   message!: string;
 
   @IsOptional()
@@ -23,11 +37,19 @@ export class CreatePingDto {
 
   @IsOptional()
   @Type(() => Number)
-  @IsIn(ALLOWED_RADIUS_METERS)
+  @IsInt()
+  @Min(1)
+  @Max(20000)
   radiusMeters?: number;
 
   @IsOptional()
   @Type(() => Number)
-  @IsIn(ALLOWED_DURATION_MINUTES)
+  @IsInt()
+  @Min(1)
+  @Max(43200) // 30 días, tope absoluto de cordura
   durationMinutes?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isSocial?: boolean;
 }

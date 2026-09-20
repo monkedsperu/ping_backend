@@ -1,6 +1,5 @@
-import { IsIn, IsLatitude, IsLongitude } from 'class-validator';
+import { IsInt, IsLatitude, IsLongitude, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ALLOWED_LISTENING_RADIUS_METERS } from './report-location.dto';
 
 export class GetNearbyPingsDto {
   @Type(() => Number)
@@ -11,8 +10,11 @@ export class GetNearbyPingsDto {
   @IsLongitude()
   longitude!: number;
 
-  /** Tu radio de escucha ahora mismo — ver Ping.findCollidingWithListeningArea. */
+  /** Tu radio de escucha ahora mismo — ver Ping.findCollidingWithListeningArea.
+   * El conjunto exacto permitido según el rol vive en GetNearbyPingsUseCase. */
   @Type(() => Number)
-  @IsIn(ALLOWED_LISTENING_RADIUS_METERS)
+  @IsInt()
+  @Min(1)
+  @Max(50000)
   listeningRadiusMeters!: number;
 }

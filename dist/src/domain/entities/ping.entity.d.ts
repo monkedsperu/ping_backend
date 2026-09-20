@@ -8,24 +8,23 @@ export interface PingProps {
     color?: string;
     location: GeoPoint;
     radiusMeters: number;
+    isSocial: boolean;
     maxRecipients: number;
     deliveredCount: number;
     createdAt: Date;
     expiresAt: Date;
     status: PingStatus;
 }
-/**
- * Reglas del MVP: tope de destinatarios sigue fijo (sin planes pagos),
- * pero radio y duración ahora son elegibles dentro de conjuntos
- * cerrados de valores — no cualquier número.
- */
-export declare const ALLOWED_RADIUS_METERS: readonly [50, 100, 200, 300, 400, 500];
-export type AllowedRadiusMeters = (typeof ALLOWED_RADIUS_METERS)[number];
-export declare const ALLOWED_DURATION_MINUTES: readonly [5, 15, 30, 60, 360, 1440];
-export type AllowedDurationMinutes = (typeof ALLOWED_DURATION_MINUTES)[number];
 export declare class Ping {
     private props;
     private constructor();
+    /**
+     * Los conjuntos permitidos (radios, duraciones, largo del mensaje) ya
+     * NO están fijos acá — los trae el caso de uso desde la configuración
+     * (ver settings-repository.port.ts), que a su vez depende del rol del
+     * autor. Esta entidad solo valida que el resultado esté dentro de lo
+     * que le pasaron, sin saber de dónde salió esa lista.
+     */
     static create(input: {
         id: string;
         authorId: string;
@@ -35,7 +34,12 @@ export declare class Ping {
         location: GeoPoint;
         radiusMeters?: number;
         durationMinutes?: number;
+        isSocial?: boolean;
         now: Date;
+        allowedRadii: number[];
+        allowedDurations: number[];
+        minMessageLength: number;
+        maxMessageLength: number;
     }): Ping;
     static reconstitute(props: PingProps): Ping;
     get id(): string;
@@ -45,6 +49,7 @@ export declare class Ping {
     get color(): string | undefined;
     get location(): GeoPoint;
     get radiusMeters(): number;
+    get isSocial(): boolean;
     get maxRecipients(): number;
     get deliveredCount(): number;
     get createdAt(): Date;

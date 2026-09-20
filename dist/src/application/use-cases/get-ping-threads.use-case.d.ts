@@ -5,6 +5,7 @@ import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
 export interface ThreadSummaryView {
     responderId: string;
     responderName: string;
+    responderRole: string;
     lastMessage: string;
     lastMessageAt: Date;
 }

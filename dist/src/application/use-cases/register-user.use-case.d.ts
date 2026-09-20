@@ -5,6 +5,7 @@ export interface AuthResult {
     accessToken: string;
     userId: string;
     displayName: string;
+    role: string;
 }
 export declare class RegisterUserUseCase {
     private readonly userRepository;

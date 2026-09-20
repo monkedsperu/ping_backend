@@ -13,11 +13,12 @@ const auth_module_1 = require("./infrastructure/http/auth.module");
 const ping_module_1 = require("./infrastructure/http/ping.module");
 const uploads_module_1 = require("./infrastructure/http/uploads.module");
 const user_module_1 = require("./infrastructure/http/user.module");
+const admin_module_1 = require("./infrastructure/http/admin.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule, ping_module_1.PingModule, uploads_module_1.UploadsModule, user_module_1.UserModule],
+        imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule, ping_module_1.PingModule, uploads_module_1.UploadsModule, user_module_1.UserModule, admin_module_1.AdminModule],
     })
 ], AppModule);

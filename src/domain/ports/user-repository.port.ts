@@ -5,6 +5,7 @@ export interface UserRepositoryPort {
   findByEmail(email: string): Promise<User | null>;
   findById(id: string): Promise<User | null>;
   findByGoogleId(googleId: string): Promise<User | null>;
+  findAll(): Promise<User[]>;
   /**
    * Crea el usuario si el email no existe, o vincula el googleId si ya
    * existe — en una sola operación atómica de base de datos (upsert por

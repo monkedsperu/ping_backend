@@ -6,4 +6,5 @@ export declare class CreatePingDto {
     longitude: number;
     radiusMeters?: number;
     durationMinutes?: number;
+    isSocial?: boolean;
 }

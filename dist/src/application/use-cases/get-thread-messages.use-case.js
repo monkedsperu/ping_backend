@@ -46,8 +46,10 @@ let GetThreadMessagesUseCase = class GetThreadMessagesUseCase {
         return {
             pingId,
             pingMessage: ping.message,
+            pingIsActive: ping.isActive(new Date()),
             responderId: responderIdInThread,
             otherParticipantName: otherParticipant?.displayName ?? 'Usuario',
+            otherParticipantRole: otherParticipant?.role ?? 'user',
             messages: messages.map((m) => m.toProps()),
         };
     }

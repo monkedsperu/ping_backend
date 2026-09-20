@@ -44,6 +44,7 @@ let GetPingDetailUseCase = class GetPingDetailUseCase {
             color: p.color,
             authorId: p.authorId,
             authorName: author?.displayName ?? 'Usuario',
+            authorRole: author?.role ?? 'user',
             latitude: p.location.latitude,
             longitude: p.location.longitude,
             radiusMeters: p.radiusMeters,

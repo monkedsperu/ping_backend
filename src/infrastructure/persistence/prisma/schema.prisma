@@ -9,12 +9,43 @@ datasource db {
   extensions = [postgis]
 }
 
+enum UserRole {
+  user
+  premium
+  mod
+  admin
+}
+
+// Un solo lugar de verdad para qué puede elegir cada rol al crear un
+// anuncio o al configurar su radio de escucha. Antes esto eran listas
+// fijas en el código (ALLOWED_RADIUS_METERS, etc.) — ahora vive acá, y el
+// panel de admin las edita. Si no existe fila para un rol, el backend usa
+// valores por defecto (ver role-limits.defaults.ts) para no romperse.
+model RoleLimits {
+  role                  UserRole @id
+  allowedPingRadii      Int[] // metros, ej. [50,100,200,300,400,500]
+  allowedListeningRadii Int[] // metros
+  allowedDurations      Int[] // minutos
+  updatedAt             DateTime @updatedAt
+}
+
+// Configuración global (no depende del rol) — hoy solo el largo del
+// mensaje. Fila única, id fijo "default".
+model PlatformSettings {
+  id               String   @id @default("default")
+  minMessageLength Int      @default(5)
+  maxMessageLength Int      @default(280)
+  updatedAt        DateTime @updatedAt
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
   passwordHash String?
   googleId     String?  @unique
   displayName  String
+  role         UserRole @default(user)
+  isDisabled   Boolean  @default(false)
   createdAt    DateTime @default(now())
 }
 
@@ -29,6 +60,7 @@ model Ping {
   // y se lee/escribe con SQL crudo en el repositorio (ver prisma-ping.repository.ts).
   location       Unsupported("geography(Point, 4326)")
   radiusMeters   Int
+  isSocial       Boolean  @default(false)
   maxRecipients  Int
   deliveredCount Int      @default(0)
   status         String   @default("active")

@@ -1,41 +1,40 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Ping = exports.ALLOWED_DURATION_MINUTES = exports.ALLOWED_RADIUS_METERS = void 0;
-/**
- * Reglas del MVP: tope de destinatarios sigue fijo (sin planes pagos),
- * pero radio y duración ahora son elegibles dentro de conjuntos
- * cerrados de valores — no cualquier número.
- */
-exports.ALLOWED_RADIUS_METERS = [50, 100, 200, 300, 400, 500];
-const DEFAULT_RADIUS_METERS = 100;
-exports.ALLOWED_DURATION_MINUTES = [5, 15, 30, 60, 360, 1440]; // 5/15/30min, 1h, 6h, 24h
-const DEFAULT_DURATION_MINUTES = 60;
+exports.Ping = void 0;
 const HEX_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
 const MVP_MAX_RECIPIENTS = 20;
-const MIN_MESSAGE_LENGTH = 5;
-const MAX_MESSAGE_LENGTH = 280;
+const DEFAULT_RADIUS_METERS = 100;
+const DEFAULT_DURATION_MINUTES = 60;
 class Ping {
     constructor(props) {
         this.props = props;
     }
+    /**
+     * Los conjuntos permitidos (radios, duraciones, largo del mensaje) ya
+     * NO están fijos acá — los trae el caso de uso desde la configuración
+     * (ver settings-repository.port.ts), que a su vez depende del rol del
+     * autor. Esta entidad solo valida que el resultado esté dentro de lo
+     * que le pasaron, sin saber de dónde salió esa lista.
+     */
     static create(input) {
         const trimmed = input.message.trim();
-        if (trimmed.length < MIN_MESSAGE_LENGTH) {
+        if (trimmed.length < input.minMessageLength) {
             throw new Error('El mensaje del ping es muy corto.');
         }
-        if (trimmed.length > MAX_MESSAGE_LENGTH) {
+        if (trimmed.length > input.maxMessageLength) {
             throw new Error('El mensaje del ping excede el largo máximo.');
         }
         if (input.color !== undefined && !HEX_COLOR_PATTERN.test(input.color)) {
             throw new Error('El color debe ser un hex de 6 dígitos, ej. "#D85A30".');
         }
+        const isSocial = input.isSocial ?? false;
         const radiusMeters = input.radiusMeters ?? DEFAULT_RADIUS_METERS;
-        if (!exports.ALLOWED_RADIUS_METERS.includes(radiusMeters)) {
-            throw new Error(`Radio inválido: ${radiusMeters}. Debe ser uno de: ${exports.ALLOWED_RADIUS_METERS.join(', ')}.`);
+        if (!input.allowedRadii.includes(radiusMeters)) {
+            throw new Error(`Radio inválido: ${radiusMeters}. Debe ser uno de: ${input.allowedRadii.join(', ')}.`);
         }
         const durationMinutes = input.durationMinutes ?? DEFAULT_DURATION_MINUTES;
-        if (!exports.ALLOWED_DURATION_MINUTES.includes(durationMinutes)) {
-            throw new Error(`Duración inválida: ${durationMinutes}. Debe ser una de: ${exports.ALLOWED_DURATION_MINUTES.join(', ')} minutos.`);
+        if (!input.allowedDurations.includes(durationMinutes)) {
+            throw new Error(`Duración inválida: ${durationMinutes}. Debe ser una de: ${input.allowedDurations.join(', ')} minutos.`);
         }
         const expiresAt = new Date(input.now.getTime() + durationMinutes * 60_000);
         return new Ping({
@@ -46,6 +45,7 @@ class Ping {
             color: input.color,
             location: input.location,
             radiusMeters,
+            isSocial,
             maxRecipients: MVP_MAX_RECIPIENTS,
             deliveredCount: 0,
             createdAt: input.now,
@@ -63,6 +63,7 @@ class Ping {
     get color() { return this.props.color; }
     get location() { return this.props.location; }
     get radiusMeters() { return this.props.radiusMeters; }
+    get isSocial() { return this.props.isSocial; }
     get maxRecipients() { return this.props.maxRecipients; }
     get deliveredCount() { return this.props.deliveredCount; }
     get createdAt() { return this.props.createdAt; }

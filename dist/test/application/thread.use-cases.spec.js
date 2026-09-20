@@ -14,6 +14,10 @@ function buildPing() {
         message: 'se perdió mi perro cerca del parque',
         location: geo_point_vo_1.GeoPoint.create(-12.09, -77.03),
         now: new Date(),
+        allowedRadii: [50, 100, 200, 300, 400, 500],
+        allowedDurations: [5, 15, 30, 60, 360, 1440],
+        minMessageLength: 5,
+        maxMessageLength: 280,
     });
 }
 class FakePingRepository {
@@ -24,6 +28,7 @@ class FakePingRepository {
     async findById() { return this.ping; }
     async findByAuthorId() { return []; }
     async findCollidingWithListeningArea() { return []; }
+    async findAll() { return []; }
 }
 class FakeThreadRepository {
     constructor(existing = []) {
