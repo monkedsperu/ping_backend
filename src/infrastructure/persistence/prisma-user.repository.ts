@@ -18,6 +18,7 @@ export class PrismaUserRepository implements UserRepositoryPort {
         displayName: user.displayName,
         role: user.role,
         isDisabled: user.isDisabled,
+        visibleCategories: user.visibleCategories,
         createdAt: user.createdAt,
       },
       update: {
@@ -25,6 +26,7 @@ export class PrismaUserRepository implements UserRepositoryPort {
         googleId: user.googleId ?? null,
         role: user.role,
         isDisabled: user.isDisabled,
+        visibleCategories: user.visibleCategories,
       },
     });
   }
@@ -77,6 +79,7 @@ export class PrismaUserRepository implements UserRepositoryPort {
     displayName: string;
     role: string;
     isDisabled: boolean;
+    visibleCategories: string[];
     createdAt: Date;
   }): User {
     return User.reconstitute({
@@ -87,6 +90,7 @@ export class PrismaUserRepository implements UserRepositoryPort {
       displayName: row.displayName,
       role: row.role as UserRole,
       isDisabled: row.isDisabled,
+      visibleCategories: row.visibleCategories,
       createdAt: row.createdAt,
     });
   }

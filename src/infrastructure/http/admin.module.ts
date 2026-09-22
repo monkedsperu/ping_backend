@@ -12,18 +12,30 @@ import { AdminListPingsUseCase } from '../../application/use-cases/admin-list-pi
 import { AdminGetPingUseCase } from '../../application/use-cases/admin-get-ping.use-case';
 import { AdminGetPingThreadsUseCase } from '../../application/use-cases/admin-get-ping-threads.use-case';
 import { AdminGetConversationUseCase } from '../../application/use-cases/admin-get-conversation.use-case';
+import { AdminListCategoriesUseCase } from '../../application/use-cases/admin-list-categories.use-case';
+import { AdminSaveCategoryUseCase } from '../../application/use-cases/admin-save-category.use-case';
+import { AdminDeleteCategoryUseCase } from '../../application/use-cases/admin-delete-category.use-case';
+import { AdminListReportsUseCase } from '../../application/use-cases/admin-list-reports.use-case';
+import { AdminUpdateReportStatusUseCase } from '../../application/use-cases/admin-update-report-status.use-case';
+import { AdminListBlocksUseCase } from '../../application/use-cases/admin-list-blocks.use-case';
+import { AdminRemoveBlockUseCase } from '../../application/use-cases/admin-remove-block.use-case';
+import { AdminCreateBlockUseCase } from '../../application/use-cases/admin-create-block.use-case';
 import { PING_REPOSITORY } from '../../domain/ports/ping-repository.port';
 import { PING_VIEW_REPOSITORY } from '../../domain/ports/ping-view-repository.port';
 import { PING_THREAD_REPOSITORY } from '../../domain/ports/ping-thread-repository.port';
 import { THREAD_MESSAGE_REPOSITORY } from '../../domain/ports/thread-message-repository.port';
 import { USER_REPOSITORY } from '../../domain/ports/user-repository.port';
 import { SETTINGS_REPOSITORY } from '../../domain/ports/settings-repository.port';
+import { REPORT_REPOSITORY } from '../../domain/ports/report-repository.port';
+import { USER_BLOCK_REPOSITORY } from '../../domain/ports/user-block-repository.port';
 import { PrismaPingRepository } from '../persistence/prisma-ping.repository';
 import { PrismaPingViewRepository } from '../persistence/prisma-ping-view.repository';
 import { PrismaPingThreadRepository } from '../persistence/prisma-ping-thread.repository';
 import { PrismaThreadMessageRepository } from '../persistence/prisma-thread-message.repository';
 import { PrismaUserRepository } from '../persistence/prisma-user.repository';
 import { PrismaSettingsRepository } from '../persistence/prisma-settings.repository';
+import { PrismaReportRepository } from '../persistence/prisma-report.repository';
+import { PrismaUserBlockRepository } from '../persistence/prisma-user-block.repository';
 
 @Module({
   controllers: [AdminController],
@@ -40,12 +52,22 @@ import { PrismaSettingsRepository } from '../persistence/prisma-settings.reposit
     AdminGetPingUseCase,
     AdminGetPingThreadsUseCase,
     AdminGetConversationUseCase,
+    AdminListCategoriesUseCase,
+    AdminSaveCategoryUseCase,
+    AdminDeleteCategoryUseCase,
+    AdminListReportsUseCase,
+    AdminUpdateReportStatusUseCase,
+    AdminListBlocksUseCase,
+    AdminRemoveBlockUseCase,
+    AdminCreateBlockUseCase,
     { provide: PING_REPOSITORY, useClass: PrismaPingRepository },
     { provide: PING_VIEW_REPOSITORY, useClass: PrismaPingViewRepository },
     { provide: PING_THREAD_REPOSITORY, useClass: PrismaPingThreadRepository },
     { provide: THREAD_MESSAGE_REPOSITORY, useClass: PrismaThreadMessageRepository },
     { provide: USER_REPOSITORY, useClass: PrismaUserRepository },
     { provide: SETTINGS_REPOSITORY, useClass: PrismaSettingsRepository },
+    { provide: REPORT_REPOSITORY, useClass: PrismaReportRepository },
+    { provide: USER_BLOCK_REPOSITORY, useClass: PrismaUserBlockRepository },
   ],
 })
 export class AdminModule {}

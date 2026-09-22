@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { Ping } from '../../domain/entities/ping.entity';
+import { Ping, DEFAULT_CATEGORY_KEY } from '../../domain/entities/ping.entity';
 import { GeoPoint } from '../../domain/value-objects/geo-point.vo';
 import {
   PING_REPOSITORY,
@@ -19,7 +19,7 @@ import {
   SETTINGS_REPOSITORY,
   SettingsRepositoryPort,
 } from '../../domain/ports/settings-repository.port';
-import { SOCIAL_PING_RADII } from '../../domain/entities/role-limits.defaults';
+import { SOCIAL_PING_RADII, SOCIAL_DURATIONS } from '../../domain/entities/role-limits.defaults';
 import { CreatePingDto } from '../dto/create-ping.dto';
 
 export interface CreatePingResult {
@@ -50,16 +50,27 @@ export class CreatePingUseCase {
     const author = await this.userRepository.findById(authorId);
     const role = author?.role ?? 'user';
 
-    const [roleLimits, messageLimits] = await Promise.all([
+    const [roleLimits, messageLimits, activeCategories] = await Promise.all([
       this.settingsRepository.getRoleLimits(role),
       this.settingsRepository.getMessageLimits(),
+      this.settingsRepository.getActiveCategories(),
     ]);
+
+    // Si mandan una categoría que no existe o está desactivada, no
+    // reventamos la creación del ping por eso — caemos a la categoría
+    // por defecto en silencio (puede pasar si el admin la desactivó
+    // justo mientras alguien tenía el formulario abierto).
+    const categoryKey =
+      dto.categoryKey && activeCategories.some((c) => c.key === dto.categoryKey)
+        ? dto.categoryKey
+        : DEFAULT_CATEGORY_KEY;
 
     // Un anuncio social usa el rango extendido de PRODUCTO (fijo, no
     // configurable), sin importar qué tenga configurado el rol del autor
     // — así, aunque un admin achique el rango de "user", reportar algo
     // como una persona perdida sigue funcionando igual.
     const allowedRadii = dto.isSocial ? SOCIAL_PING_RADII : roleLimits.allowedPingRadii;
+    const allowedDurations = dto.isSocial ? SOCIAL_DURATIONS : roleLimits.allowedDurations;
 
     const ping = Ping.create({
       id: randomUUID(),
@@ -71,9 +82,10 @@ export class CreatePingUseCase {
       radiusMeters: dto.radiusMeters,
       durationMinutes: dto.durationMinutes,
       isSocial: dto.isSocial,
+      categoryKey,
       now: new Date(),
       allowedRadii,
-      allowedDurations: roleLimits.allowedDurations,
+      allowedDurations,
       minMessageLength: messageLimits.minMessageLength,
       maxMessageLength: messageLimits.maxMessageLength,
     });

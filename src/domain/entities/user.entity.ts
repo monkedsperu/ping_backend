@@ -8,6 +8,7 @@ export interface UserProps {
   displayName: string;
   role: UserRole;
   isDisabled: boolean;
+  visibleCategories: string[];
   createdAt: Date;
 }
 
@@ -37,6 +38,7 @@ export class User {
       displayName,
       role: 'user',
       isDisabled: false,
+      visibleCategories: [],
       createdAt: input.now,
     });
   }
@@ -53,6 +55,7 @@ export class User {
   get role() { return this.props.role; }
   get isAdmin() { return this.props.role === 'admin'; }
   get isDisabled() { return this.props.isDisabled; }
+  get visibleCategories() { return this.props.visibleCategories; }
   get createdAt() { return this.props.createdAt; }
 
   linkGoogleAccount(googleId: string): void {
@@ -77,5 +80,11 @@ export class User {
 
   setRole(role: UserRole): void {
     this.props.role = role;
+  }
+
+  /** Vacío = "quiero ver todas las categorías" — el filtro real vive en
+   * GetNearbyPingsUseCase, esta entidad solo guarda la preferencia. */
+  setVisibleCategories(categories: string[]): void {
+    this.props.visibleCategories = categories;
   }
 }

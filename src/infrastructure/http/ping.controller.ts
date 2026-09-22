@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { CreatePingUseCase } from '../../application/use-cases/create-ping.use-case';
 import { GetNearbyPingsUseCase } from '../../application/use-cases/get-nearby-pings.use-case';
 import { GetPingDetailUseCase } from '../../application/use-cases/get-ping-detail.use-case';
@@ -8,6 +8,10 @@ import { GetPingThreadsUseCase } from '../../application/use-cases/get-ping-thre
 import { GetMyPingsUseCase } from '../../application/use-cases/get-my-pings.use-case';
 import { GetMyResponsesUseCase } from '../../application/use-cases/get-my-responses.use-case';
 import { GetThreadMessagesUseCase } from '../../application/use-cases/get-thread-messages.use-case';
+import { GetMyLimitsUseCase } from '../../application/use-cases/get-my-limits.use-case';
+import { GetPingCategoriesUseCase } from '../../application/use-cases/get-ping-categories.use-case';
+import { ClosePingUseCase } from '../../application/use-cases/close-ping.use-case';
+import { DeletePingUseCase } from '../../application/use-cases/delete-ping.use-case';
 import { CreatePingDto } from '../../application/dto/create-ping.dto';
 import { GetNearbyPingsDto } from '../../application/dto/get-nearby-pings.dto';
 import { SendThreadMessageDto } from '../../application/dto/thread-message.dto';
@@ -27,7 +31,27 @@ export class PingController {
     private readonly getMyPings: GetMyPingsUseCase,
     private readonly getMyResponses: GetMyResponsesUseCase,
     private readonly getThreadMessages: GetThreadMessagesUseCase,
+    private readonly getMyLimits: GetMyLimitsUseCase,
+    private readonly getPingCategories: GetPingCategoriesUseCase,
+    private readonly closePing: ClosePingUseCase,
+    private readonly deletePing: DeletePingUseCase,
   ) {}
+
+  // --- Configuración: categorías activas — igual que "limits", debe ir
+  // ANTES de "@Get(':id')".
+  @Get('categories')
+  async categories() {
+    return this.getPingCategories.execute();
+  }
+
+  // --- Configuración: qué puede elegir ESTE usuario ahora mismo ---
+  // Debe ir ANTES de "@Get(':id')" — si no, NestJS interpreta "limits"
+  // como si fuera el id de un ping.
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get('limits')
+  async myLimits(@CurrentUserIdOptional() viewerId: string | null) {
+    return this.getMyLimits.execute(viewerId);
+  }
 
   // --- Lectura: navegable sin cuenta ---
 
@@ -112,5 +136,23 @@ export class PingController {
   ) {
     const message = await this.sendThreadMessage.execute(pingId, responderId, dto, senderId);
     return message.toProps();
+  }
+
+  /** Marcar como finalizado — sigue existiendo, pero ya no acepta
+   * conversaciones nuevas ni aparece como activo. */
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/close')
+  async close(@CurrentUserId() requesterId: string, @Param('id') id: string) {
+    await this.closePing.execute(id, requesterId);
+    return { ok: true };
+  }
+
+  /** Borrado suave: deja de aparecer en cualquier lado, pero no se borra
+   * de verdad (las conversaciones y denuncias pueden seguir refiriéndolo). */
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async remove(@CurrentUserId() requesterId: string, @Param('id') id: string) {
+    await this.deletePing.execute(id, requesterId);
+    return { ok: true };
   }
 }

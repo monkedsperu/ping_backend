@@ -9,12 +9,17 @@ import { GetPingThreadsUseCase } from '../../application/use-cases/get-ping-thre
 import { GetMyPingsUseCase } from '../../application/use-cases/get-my-pings.use-case';
 import { GetMyResponsesUseCase } from '../../application/use-cases/get-my-responses.use-case';
 import { GetThreadMessagesUseCase } from '../../application/use-cases/get-thread-messages.use-case';
+import { GetMyLimitsUseCase } from '../../application/use-cases/get-my-limits.use-case';
+import { GetPingCategoriesUseCase } from '../../application/use-cases/get-ping-categories.use-case';
+import { ClosePingUseCase } from '../../application/use-cases/close-ping.use-case';
+import { DeletePingUseCase } from '../../application/use-cases/delete-ping.use-case';
 import { PING_REPOSITORY } from '../../domain/ports/ping-repository.port';
 import { PING_THREAD_REPOSITORY } from '../../domain/ports/ping-thread-repository.port';
 import { PING_VIEW_REPOSITORY } from '../../domain/ports/ping-view-repository.port';
 import { SETTINGS_REPOSITORY } from '../../domain/ports/settings-repository.port';
 import { THREAD_MESSAGE_REPOSITORY } from '../../domain/ports/thread-message-repository.port';
 import { USER_REPOSITORY } from '../../domain/ports/user-repository.port';
+import { USER_BLOCK_REPOSITORY } from '../../domain/ports/user-block-repository.port';
 import { USER_LOCATOR } from '../../domain/ports/user-locator.port';
 import { NOTIFICATION_SENDER } from '../../domain/ports/notification.port';
 import { PrismaPingRepository } from '../persistence/prisma-ping.repository';
@@ -23,6 +28,7 @@ import { PrismaPingViewRepository } from '../persistence/prisma-ping-view.reposi
 import { PrismaSettingsRepository } from '../persistence/prisma-settings.repository';
 import { PrismaThreadMessageRepository } from '../persistence/prisma-thread-message.repository';
 import { PrismaUserRepository } from '../persistence/prisma-user.repository';
+import { PrismaUserBlockRepository } from '../persistence/prisma-user-block.repository';
 import { PrismaUserLocatorRepository } from '../persistence/prisma-user-locator.repository';
 import { FcmNotificationAdapter } from '../notifications/fcm-notification.adapter';
 
@@ -43,12 +49,17 @@ import { FcmNotificationAdapter } from '../notifications/fcm-notification.adapte
     GetMyPingsUseCase,
     GetMyResponsesUseCase,
     GetThreadMessagesUseCase,
+    GetMyLimitsUseCase,
+    GetPingCategoriesUseCase,
+    ClosePingUseCase,
+    DeletePingUseCase,
     { provide: PING_REPOSITORY, useClass: PrismaPingRepository },
     { provide: PING_THREAD_REPOSITORY, useClass: PrismaPingThreadRepository },
     { provide: PING_VIEW_REPOSITORY, useClass: PrismaPingViewRepository },
     { provide: SETTINGS_REPOSITORY, useClass: PrismaSettingsRepository },
     { provide: THREAD_MESSAGE_REPOSITORY, useClass: PrismaThreadMessageRepository },
     { provide: USER_REPOSITORY, useClass: PrismaUserRepository },
+    { provide: USER_BLOCK_REPOSITORY, useClass: PrismaUserBlockRepository },
     { provide: USER_LOCATOR, useClass: PrismaUserLocatorRepository },
     { provide: NOTIFICATION_SENDER, useClass: FcmNotificationAdapter },
   ],

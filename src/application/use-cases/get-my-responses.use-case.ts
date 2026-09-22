@@ -19,6 +19,7 @@ export interface MyResponseView {
   pingMessage: string;
   authorName: string;
   color?: string;
+  categoryKey: string;
   lastMessage: string;
   lastMessageAt: Date;
   isPingActive: boolean;
@@ -62,6 +63,7 @@ export class GetMyResponsesUseCase {
           pingMessage: p.message,
           authorName: author?.displayName ?? 'Usuario',
           color: p.color,
+          categoryKey: p.categoryKey,
           lastMessage: lastMessage?.toProps().message ?? '',
           lastMessageAt: lastMessage?.toProps().createdAt ?? thread.createdAt,
           isPingActive: ping.isActive(now),

@@ -15,6 +15,7 @@ export interface AdminPingView {
   latitude: number;
   longitude: number;
   radiusMeters: number;
+  categoryKey: string;
   status: string;
   isActive: boolean;
   threadCount: number;
@@ -51,6 +52,7 @@ export class AdminListPingsUseCase {
           latitude: p.location.latitude,
           longitude: p.location.longitude,
           radiusMeters: p.radiusMeters,
+          categoryKey: p.categoryKey,
           status: p.status,
           isActive: ping.isActive(now),
           threadCount: threads.length,

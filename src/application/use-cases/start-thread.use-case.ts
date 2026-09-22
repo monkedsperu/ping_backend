@@ -16,6 +16,10 @@ import {
   THREAD_MESSAGE_REPOSITORY,
   ThreadMessageRepositoryPort,
 } from '../../domain/ports/thread-message-repository.port';
+import {
+  USER_BLOCK_REPOSITORY,
+  UserBlockRepositoryPort,
+} from '../../domain/ports/user-block-repository.port';
 import { SendThreadMessageDto } from '../dto/thread-message.dto';
 
 @Injectable()
@@ -26,6 +30,8 @@ export class StartThreadUseCase {
     private readonly threadRepository: PingThreadRepositoryPort,
     @Inject(THREAD_MESSAGE_REPOSITORY)
     private readonly messageRepository: ThreadMessageRepositoryPort,
+    @Inject(USER_BLOCK_REPOSITORY)
+    private readonly userBlockRepository: UserBlockRepositoryPort,
   ) {}
 
   async execute(
@@ -42,6 +48,14 @@ export class StartThreadUseCase {
     }
     if (ping.authorId === responderId) {
       throw new ForbiddenException('No puedes responder tu propio ping.');
+    }
+
+    const blocked = await this.userBlockRepository.isBlockedEitherWay(
+      ping.authorId,
+      responderId,
+    );
+    if (blocked) {
+      throw new ForbiddenException('No puedes iniciar esta conversación.');
     }
 
     const existing = await this.threadRepository.findByPingAndResponder(pingId, responderId);

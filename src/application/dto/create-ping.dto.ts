@@ -52,4 +52,8 @@ export class CreatePingDto {
   @IsOptional()
   @IsBoolean()
   isSocial?: boolean;
+
+  @IsOptional()
+  @IsString()
+  categoryKey?: string;
 }

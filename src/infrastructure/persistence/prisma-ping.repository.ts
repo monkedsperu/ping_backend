@@ -14,19 +14,21 @@ interface PingRow {
   longitude: number;
   radiusMeters: number;
   isSocial: boolean;
+  categoryKey: string;
   maxRecipients: number;
   deliveredCount: number;
   status: string;
   createdAt: Date;
   expiresAt: Date;
+  deletedAt: Date | null;
 }
 
 const SELECT_COLUMNS = `
   id, "authorId", message, "imageUrl", color,
   ST_Y(location::geometry) as latitude,
   ST_X(location::geometry) as longitude,
-  "radiusMeters", "isSocial", "maxRecipients", "deliveredCount",
-  status, "createdAt", "expiresAt"
+  "radiusMeters", "isSocial", "categoryKey", "maxRecipients", "deliveredCount",
+  status, "createdAt", "expiresAt", "deletedAt"
 `;
 
 @Injectable()
@@ -38,23 +40,24 @@ export class PrismaPingRepository implements PingRepositoryPort {
     await this.prisma.$executeRaw`
       INSERT INTO "Ping" (
         id, "authorId", message, "imageUrl", color, location,
-        "radiusMeters", "isSocial", "maxRecipients", "deliveredCount",
-        status, "createdAt", "expiresAt"
+        "radiusMeters", "isSocial", "categoryKey", "maxRecipients", "deliveredCount",
+        status, "createdAt", "expiresAt", "deletedAt"
       ) VALUES (
         ${p.id}, ${p.authorId}, ${p.message}, ${p.imageUrl ?? null}, ${p.color ?? null},
         ST_SetSRID(ST_MakePoint(${p.location.longitude}, ${p.location.latitude}), 4326)::geography,
-        ${p.radiusMeters}, ${p.isSocial}, ${p.maxRecipients}, ${p.deliveredCount},
-        ${p.status}, ${p.createdAt}, ${p.expiresAt}
+        ${p.radiusMeters}, ${p.isSocial}, ${p.categoryKey}, ${p.maxRecipients}, ${p.deliveredCount},
+        ${p.status}, ${p.createdAt}, ${p.expiresAt}, ${p.deletedAt ?? null}
       )
       ON CONFLICT (id) DO UPDATE SET
         "deliveredCount" = EXCLUDED."deliveredCount",
-        status = EXCLUDED.status;
+        status = EXCLUDED.status,
+        "deletedAt" = EXCLUDED."deletedAt";
     `;
   }
 
   async findById(id: string): Promise<Ping | null> {
     const rows = await this.prisma.$queryRawUnsafe<PingRow[]>(
-      `SELECT ${SELECT_COLUMNS} FROM "Ping" WHERE id = $1;`,
+      `SELECT ${SELECT_COLUMNS} FROM "Ping" WHERE id = $1 AND "deletedAt" IS NULL;`,
       id,
     );
     return rows[0] ? this.toDomain(rows[0]) : null;
@@ -62,7 +65,7 @@ export class PrismaPingRepository implements PingRepositoryPort {
 
   async findByAuthorId(authorId: string): Promise<Ping[]> {
     const rows = await this.prisma.$queryRawUnsafe<PingRow[]>(
-      `SELECT ${SELECT_COLUMNS} FROM "Ping" WHERE "authorId" = $1 ORDER BY "createdAt" DESC;`,
+      `SELECT ${SELECT_COLUMNS} FROM "Ping" WHERE "authorId" = $1 AND "deletedAt" IS NULL ORDER BY "createdAt" DESC;`,
       authorId,
     );
     return rows.map((row) => this.toDomain(row));
@@ -70,7 +73,7 @@ export class PrismaPingRepository implements PingRepositoryPort {
 
   async findAll(): Promise<Ping[]> {
     const rows = await this.prisma.$queryRawUnsafe<PingRow[]>(
-      `SELECT ${SELECT_COLUMNS} FROM "Ping" ORDER BY "createdAt" DESC LIMIT 500;`,
+      `SELECT ${SELECT_COLUMNS} FROM "Ping" WHERE "deletedAt" IS NULL ORDER BY "createdAt" DESC LIMIT 500;`,
     );
     return rows.map((row) => this.toDomain(row));
   }
@@ -86,10 +89,11 @@ export class PrismaPingRepository implements PingRepositoryPort {
       SELECT id, "authorId", message, "imageUrl", color,
              ST_Y(location::geometry) as latitude,
              ST_X(location::geometry) as longitude,
-             "radiusMeters", "isSocial", "maxRecipients", "deliveredCount",
-             status, "createdAt", "expiresAt"
+             "radiusMeters", "isSocial", "categoryKey", "maxRecipients", "deliveredCount",
+             status, "createdAt", "expiresAt", "deletedAt"
       FROM "Ping"
       WHERE status = 'active'
+        AND "deletedAt" IS NULL
         AND "expiresAt" > now()
         AND ST_DWithin(
           location,
@@ -111,11 +115,13 @@ export class PrismaPingRepository implements PingRepositoryPort {
       location: GeoPoint.create(row.latitude, row.longitude),
       radiusMeters: row.radiusMeters,
       isSocial: row.isSocial,
+      categoryKey: row.categoryKey,
       maxRecipients: row.maxRecipients,
       deliveredCount: row.deliveredCount,
       createdAt: row.createdAt,
       expiresAt: row.expiresAt,
       status: row.status as PingStatus,
+      deletedAt: row.deletedAt ?? undefined,
     });
   }
 }

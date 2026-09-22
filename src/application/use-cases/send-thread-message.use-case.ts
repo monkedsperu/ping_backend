@@ -10,6 +10,10 @@ import {
   THREAD_MESSAGE_REPOSITORY,
   ThreadMessageRepositoryPort,
 } from '../../domain/ports/thread-message-repository.port';
+import {
+  USER_BLOCK_REPOSITORY,
+  UserBlockRepositoryPort,
+} from '../../domain/ports/user-block-repository.port';
 import { SendThreadMessageDto } from '../dto/thread-message.dto';
 
 /**
@@ -26,6 +30,8 @@ export class SendThreadMessageUseCase {
     private readonly threadRepository: PingThreadRepositoryPort,
     @Inject(THREAD_MESSAGE_REPOSITORY)
     private readonly messageRepository: ThreadMessageRepositoryPort,
+    @Inject(USER_BLOCK_REPOSITORY)
+    private readonly userBlockRepository: UserBlockRepositoryPort,
   ) {}
 
   async execute(
@@ -53,6 +59,15 @@ export class SendThreadMessageUseCase {
     const isParticipant = senderId === ping.authorId || senderId === responderIdInThread;
     if (!isParticipant) {
       throw new ForbiddenException('No formas parte de esta conversación.');
+    }
+
+    // El bloqueo aplica aunque la conversación ya existiera de antes —
+    // si cualquiera de los dos bloqueó al otro DESPUÉS de empezar a
+    // hablar, dejan de poder seguir escribiéndose.
+    const otherParticipantId = senderId === ping.authorId ? responderIdInThread : ping.authorId;
+    const blocked = await this.userBlockRepository.isBlockedEitherWay(senderId, otherParticipantId);
+    if (blocked) {
+      throw new ForbiddenException('No puedes enviar mensajes en esta conversación.');
     }
 
     const message = ThreadMessage.create({

@@ -2,6 +2,11 @@ import { GeoPoint } from '../value-objects/geo-point.vo';
 
 export type PingStatus = 'active' | 'expired' | 'closed';
 
+/** Solo referencial acá — la lista real y configurable vive en la tabla
+ * PingCategory (ver settings-repository.port.ts). "general" es el valor
+ * por defecto para cualquier ping que no elija categoría explícita. */
+export const DEFAULT_CATEGORY_KEY = 'general';
+
 export interface PingProps {
   id: string;
   authorId: string;
@@ -11,11 +16,13 @@ export interface PingProps {
   location: GeoPoint;
   radiusMeters: number;
   isSocial: boolean;
+  categoryKey: string;
   maxRecipients: number;
   deliveredCount: number;
   createdAt: Date;
   expiresAt: Date;
   status: PingStatus;
+  deletedAt?: Date;
 }
 
 const HEX_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
@@ -43,6 +50,7 @@ export class Ping {
     radiusMeters?: number;
     durationMinutes?: number;
     isSocial?: boolean;
+    categoryKey?: string;
     now: Date;
     allowedRadii: number[];
     allowedDurations: number[];
@@ -88,6 +96,7 @@ export class Ping {
       location: input.location,
       radiusMeters,
       isSocial,
+      categoryKey: input.categoryKey ?? DEFAULT_CATEGORY_KEY,
       maxRecipients: MVP_MAX_RECIPIENTS,
       deliveredCount: 0,
       createdAt: input.now,
@@ -108,6 +117,8 @@ export class Ping {
   get location() { return this.props.location; }
   get radiusMeters() { return this.props.radiusMeters; }
   get isSocial() { return this.props.isSocial; }
+  get categoryKey() { return this.props.categoryKey; }
+  get deletedAt() { return this.props.deletedAt; }
   get maxRecipients() { return this.props.maxRecipients; }
   get deliveredCount() { return this.props.deliveredCount; }
   get createdAt() { return this.props.createdAt; }
@@ -115,7 +126,23 @@ export class Ping {
   get status() { return this.props.status; }
 
   isActive(now: Date): boolean {
-    return this.props.status === 'active' && now < this.props.expiresAt;
+    return !this.props.deletedAt && this.props.status === 'active' && now < this.props.expiresAt;
+  }
+
+  /** "Marcar como finalizado" — deja de aparecer como activo (no más
+   * respuestas nuevas), pero sigue existiendo para quien ya conversó. */
+  close(): void {
+    this.props.status = 'closed';
+  }
+
+  /** Borrado suave: nunca más aparece en ninguna consulta normal, pero
+   * la fila se conserva (conversaciones/denuncias pueden referenciarla). */
+  softDelete(): void {
+    this.props.deletedAt = new Date();
+  }
+
+  isDeleted(): boolean {
+    return Boolean(this.props.deletedAt);
   }
 
   hasReachedRecipientLimit(): boolean {

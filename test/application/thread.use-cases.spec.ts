@@ -6,6 +6,7 @@ import {
   PingThreadSummary,
 } from '../../src/domain/ports/ping-thread-repository.port';
 import { ThreadMessageRepositoryPort } from '../../src/domain/ports/thread-message-repository.port';
+import { UserBlockRepositoryPort } from '../../src/domain/ports/user-block-repository.port';
 import { Ping } from '../../src/domain/entities/ping.entity';
 import { ThreadMessage } from '../../src/domain/entities/thread-message.entity';
 import { GeoPoint } from '../../src/domain/value-objects/geo-point.vo';
@@ -66,12 +67,24 @@ class FakeMessageRepository implements ThreadMessageRepositoryPort {
   async findLastByThreadId() { return this.saved[this.saved.length - 1] ?? null; }
 }
 
+/** Nadie bloqueado por defecto — cada test que sí lo necesite puede
+ * extender esto o pasar su propia instancia. */
+class FakeUserBlockRepository implements UserBlockRepositoryPort {
+  async block() {}
+  async unblock() {}
+  async isBlockedEitherWay() { return false; }
+  async findBlockedIdsByUser() { return []; }
+  async findMyBlocks() { return []; }
+  async findAll() { return []; }
+}
+
 describe('StartThreadUseCase', () => {
   it('rechaza que el autor inicie un hilo en su propio ping', async () => {
     const useCase = new StartThreadUseCase(
       new FakePingRepository(buildPing()),
       new FakeThreadRepository(),
       new FakeMessageRepository(),
+      new FakeUserBlockRepository(),
     );
 
     await expect(
@@ -87,6 +100,7 @@ describe('StartThreadUseCase', () => {
       new FakePingRepository(buildPing()),
       threadRepository,
       new FakeMessageRepository(),
+      new FakeUserBlockRepository(),
     );
 
     await expect(
@@ -105,6 +119,7 @@ describe('SendThreadMessageUseCase', () => {
       new FakePingRepository(buildPing()),
       threadRepository,
       messageRepository,
+      new FakeUserBlockRepository(),
     );
 
     await useCase.execute('ping-1', RESPONDER_ID, { message: '¿qué collar tenía?' }, AUTHOR_ID);
@@ -121,6 +136,7 @@ describe('SendThreadMessageUseCase', () => {
       new FakePingRepository(buildPing()),
       threadRepository,
       new FakeMessageRepository(),
+      new FakeUserBlockRepository(),
     );
 
     await expect(

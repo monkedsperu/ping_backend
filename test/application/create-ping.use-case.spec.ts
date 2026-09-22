@@ -4,7 +4,7 @@ import { UserLocatorPort, NearbyUser } from '../../src/domain/ports/user-locator
 import { NotificationPort, PushNotification } from '../../src/domain/ports/notification.port';
 import { UserRepositoryPort } from '../../src/domain/ports/user-repository.port';
 import { SettingsRepositoryPort } from '../../src/domain/ports/settings-repository.port';
-import { DEFAULT_ROLE_LIMITS, DEFAULT_MESSAGE_LIMITS } from '../../src/domain/entities/role-limits.defaults';
+import { DEFAULT_ROLE_LIMITS, DEFAULT_MESSAGE_LIMITS, DEFAULT_PING_CATEGORIES } from '../../src/domain/entities/role-limits.defaults';
 import { Ping } from '../../src/domain/entities/ping.entity';
 
 /**
@@ -60,6 +60,14 @@ class FakeSettingsRepository implements SettingsRepositoryPort {
     return DEFAULT_MESSAGE_LIMITS;
   }
   async saveMessageLimits() {}
+  async getAllCategories() {
+    return DEFAULT_PING_CATEGORIES.map((c) => ({ ...c }));
+  }
+  async getActiveCategories() {
+    return DEFAULT_PING_CATEGORIES.filter((c) => c.isActive).map((c) => ({ ...c }));
+  }
+  async saveCategory() {}
+  async deleteCategory() {}
 }
 
 describe('CreatePingUseCase', () => {

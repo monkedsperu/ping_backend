@@ -21,6 +21,7 @@ export interface AdminPingDetail {
   longitude: number;
   radiusMeters: number;
   isSocial: boolean;
+  categoryKey: string;
   status: string;
   isActive: boolean;
   durationMinutes: number;
@@ -69,6 +70,7 @@ export class AdminGetPingUseCase {
       longitude: p.location.longitude,
       radiusMeters: p.radiusMeters,
       isSocial: p.isSocial,
+      categoryKey: p.categoryKey,
       status: p.status,
       isActive: ping.isActive(new Date()),
       durationMinutes,

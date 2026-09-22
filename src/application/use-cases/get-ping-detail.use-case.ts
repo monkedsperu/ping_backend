@@ -14,6 +14,7 @@ export interface PingDetailView {
   message: string;
   imageUrl?: string;
   color?: string;
+  categoryKey: string;
   authorId: string;
   authorName: string;
   authorRole: string;
@@ -57,6 +58,7 @@ export class GetPingDetailUseCase {
       message: p.message,
       imageUrl: p.imageUrl,
       color: p.color,
+      categoryKey: p.categoryKey,
       authorId: p.authorId,
       authorName: author?.displayName ?? 'Usuario',
       authorRole: author?.role ?? 'user',

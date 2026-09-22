@@ -18,6 +18,10 @@ export class SetRoleLimitsDto {
   @IsInt({ each: true })
   @Min(1, { each: true })
   allowedDurations!: number[];
+
+  @IsInt()
+  @Min(1)
+  maxListenersPerPing!: number;
 }
 
 export class SetMessageLimitsDto {

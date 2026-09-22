@@ -17,6 +17,7 @@ export interface MyPingView {
   message: string;
   imageUrl?: string;
   color?: string;
+  categoryKey: string;
   radiusMeters: number;
   createdAt: Date;
   expiresAt: Date;
@@ -57,6 +58,7 @@ export class GetMyPingsUseCase {
           message: p.message,
           imageUrl: p.imageUrl,
           color: p.color,
+          categoryKey: p.categoryKey,
           radiusMeters: p.radiusMeters,
           createdAt: p.createdAt,
           expiresAt: p.expiresAt,

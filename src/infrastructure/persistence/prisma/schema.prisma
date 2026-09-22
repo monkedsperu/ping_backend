@@ -26,6 +26,9 @@ model RoleLimits {
   allowedPingRadii      Int[] // metros, ej. [50,100,200,300,400,500]
   allowedListeningRadii Int[] // metros
   allowedDurations      Int[] // minutos
+  // Placeholder — hoy no limita nada de verdad, solo se muestra
+  // deshabilitado en el formulario de crear anuncio.
+  maxListenersPerPing   Int      @default(50)
   updatedAt             DateTime @updatedAt
 }
 
@@ -46,6 +49,10 @@ model User {
   displayName  String
   role         UserRole @default(user)
   isDisabled   Boolean  @default(false)
+  // Categorías de anuncio que quiere ver ("venta", "ayuda", etc.) — un
+  // array vacío significa "todas" (comportamiento por defecto para
+  // cuentas nuevas, para no esconderles nada sin que lo hayan pedido).
+  visibleCategories String[] @default([])
   createdAt    DateTime @default(now())
 }
 
@@ -61,11 +68,16 @@ model Ping {
   location       Unsupported("geography(Point, 4326)")
   radiusMeters   Int
   isSocial       Boolean  @default(false)
+  categoryKey    String   @default("general")
   maxRecipients  Int
   deliveredCount Int      @default(0)
   status         String   @default("active")
   createdAt      DateTime @default(now())
   expiresAt      DateTime
+  // Borrado suave: si el usuario "elimina" su anuncio, no se borra la
+  // fila (las conversaciones y denuncias podrían referenciarla) — solo
+  // deja de aparecer en cualquier consulta normal.
+  deletedAt      DateTime?
 
   threads PingThread[]
 
@@ -123,4 +135,45 @@ model PingView {
 
   @@unique([pingId, viewerId])
   @@index([pingId])
+}
+
+// El "tipo" de anuncio (venta, compra, ayuda, info...). Editable desde
+// el panel de admin — "key" es el valor que se guarda en Ping.categoryKey
+// y nunca debería cambiar una vez creado (renombra "label", no "key").
+model PingCategory {
+  key       String  @id
+  label     String
+  icon      String? // nombre de ícono de Ionicons, ej. "cart-outline"
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+}
+
+// Una denuncia siempre es sobre UN USUARIO (comportamiento), y
+// opcionalmente puede estar ligada a un anuncio puntual como contexto.
+model Report {
+  id             String    @id @default(uuid())
+  reporterId     String
+  reportedUserId String
+  pingId         String?
+  reason         String
+  status         String    @default("pending") // pending | reviewed | dismissed
+  createdAt      DateTime  @default(now())
+  reviewedAt     DateTime?
+  reviewedById   String?
+
+  @@index([status])
+  @@index([reportedUserId])
+}
+
+// Bloqueo dirigido: A bloqueó a B. Se consulta en ambos sentidos al
+// armar el feed y al iniciar conversaciones (ver GetNearbyPingsUseCase y
+// StartThreadUseCase) — que A no vea a B implica también que B no vea a A.
+model UserBlock {
+  id        String   @id @default(uuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
 }
